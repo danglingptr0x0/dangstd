@@ -80,7 +80,7 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
                 fi
 
                 if [[ -z "$ERRORS" ]]; then
-                    git test-state save
+                    "$HOME/.config/git/bin/git-test-state" save
                 fi
             fi
         fi
