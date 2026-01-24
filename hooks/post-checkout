@@ -1,0 +1,40 @@
+#!/usr/bin/env zsh
+
+PREV_HEAD="$1"
+NEW_HEAD="$2"
+BRANCH_CHECKOUT="$3"
+
+git branchless hook post-checkout "$@" 2>/dev/null
+
+[[ "$BRANCH_CHECKOUT" != "1" ]] && exit 0
+[[ "$PREV_HEAD" == "$NEW_HEAD" ]] && exit 0
+
+if [[ -f "CMakeLists.txt" ]]; then
+    if [[ ! -f "build/compile_commands.json" ]] || [[ "CMakeLists.txt" -nt "build/compile_commands.json" ]]; then
+        echo "regenerating compile_commands.json..."
+        cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug >/dev/null 2>&1
+        [[ -f "build/compile_commands.json" ]] && ln -sf build/compile_commands.json . 2>/dev/null
+    fi
+elif [[ -f "Makefile" ]] && command -v bear &>/dev/null; then
+    if [[ ! -f "compile_commands.json" ]] || [[ "Makefile" -nt "compile_commands.json" ]]; then
+        echo "regenerating compile_commands.json via bear..."
+        bear -- make -n >/dev/null 2>&1 || true
+    fi
+fi
+
+if command -v ccache &>/dev/null; then
+    STATS=$(ccache -s 2>/dev/null | grep -E "^(Hits|Misses|Hit rate)" | head -3)
+    [[ -n "$STATS" ]] && echo "ccache: $(echo $STATS | tr '\n' '; ' | sed 's/; $//')"
+fi
+
+STALE_DAYS=30
+STALE_BRANCHES=$(git for-each-ref --sort=-committerdate --format='%(refname:short) %(committerdate:relative)' refs/heads/ 2>/dev/null | while read branch date; do
+    [[ "$date" =~ "month" || "$date" =~ "year" ]] && echo "  $branch ($date)"
+done)
+if [[ -n "$STALE_BRANCHES" ]]; then
+    echo ""
+    echo "stale branches (>${STALE_DAYS}d):"
+    echo "$STALE_BRANCHES"
+fi
+
+exit 0

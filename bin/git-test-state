@@ -1,0 +1,84 @@
+#!/usr/bin/env zsh
+
+STATE_FILE=".test-state"
+COVERAGE_MIN=50
+
+usage() {
+    echo "usage: git test-state <save|check>"
+    echo ""
+    echo "  save   - run after tests pass to record state + coverage"
+    echo "  check  - verify current code is tested with sufficient coverage"
+    exit 1
+}
+
+compute_hash() {
+    find src source -name '*.[ch]' -o -name '*.cpp' -o -name '*.hpp' 2>/dev/null | \
+        sort | xargs sha256sum 2>/dev/null | sha256sum | cut -d' ' -f1
+}
+
+get_coverage() {
+    if [[ -f "build/coverage.info" ]]; then
+        lcov --summary build/coverage.info 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1
+    elif command -v gcovr &>/dev/null; then
+        gcovr --print-summary 2>&1 | grep -oP 'lines:\s*\K[0-9.]+' | head -1
+    elif [[ -d "build" ]]; then
+        gcov build/**/*.gcno 2>/dev/null | grep -oP "Lines executed:\K[0-9.]+" | \
+            awk '{sum+=$1; n++} END {if(n>0) print sum/n; else print 0}'
+    else
+        echo "0"
+    fi
+}
+
+cmd_save() {
+    HASH=$(compute_hash)
+    COVERAGE=$(get_coverage)
+
+    if [[ -z "$COVERAGE" || "$COVERAGE" == "0" ]]; then
+        echo "warning: could not determine coverage"
+        COVERAGE="0"
+    fi
+
+    echo "hash=$HASH" > "$STATE_FILE"
+    echo "coverage=$COVERAGE" >> "$STATE_FILE"
+    echo "timestamp=$(date -Iseconds)" >> "$STATE_FILE"
+
+    echo "saved test state: coverage ${COVERAGE}%"
+}
+
+cmd_check() {
+    if [[ ! -f "$STATE_FILE" ]]; then
+        echo "error: no test state found; run tests first"
+        echo "  make test && git test-state save"
+        return 1
+    fi
+
+    source "$STATE_FILE"
+    CURRENT_HASH=$(compute_hash)
+
+    ERRORS=""
+
+    if [[ "$CURRENT_HASH" != "$hash" ]]; then
+        ERRORS+="error: code changed since last test run\n"
+        ERRORS+="  last tested: $timestamp\n"
+        ERRORS+="  run: make test && git test-state save\n\n"
+    fi
+
+    if (( $(echo "$coverage < $COVERAGE_MIN" | bc -l) )); then
+        ERRORS+="error: coverage ${coverage}% below minimum ${COVERAGE_MIN}%\n"
+        ERRORS+="  add tests to increase coverage\n\n"
+    fi
+
+    if [[ -n "$ERRORS" ]]; then
+        echo -e "$ERRORS"
+        return 1
+    fi
+
+    echo "test state OK: hash matches, coverage ${coverage}%"
+    return 0
+}
+
+case "$1" in
+    save)  cmd_save ;;
+    check) cmd_check ;;
+    *)     usage ;;
+esac

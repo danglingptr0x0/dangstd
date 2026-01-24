@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+APPLY=0
+[[ "$1" == "--apply" ]] && APPLY=1
+
+CURRENT=$(git describe --tags --abbrev=0 2>/dev/null || echo "r0.0.0")
+CURRENT="${CURRENT#r}"
+
+IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+MAJOR=${MAJOR:-0}
+MINOR=${MINOR:-0}
+PATCH=${PATCH:-0}
+
+COMMITS=$(git log "${CURRENT:+r$CURRENT}..HEAD" --pretty=format:"%s" 2>/dev/null)
+
+BUMP="patch"
+while IFS= read -r msg; do
+    [[ -z "$msg" ]] && continue
+    [[ "$msg" =~ ^feat(\(.+\))?!: ]] && BUMP="major" && break
+    [[ "$msg" =~ BREAKING\ CHANGE ]] && BUMP="major" && break
+    [[ "$msg" =~ ^feat(\(.+\))?: ]] && [[ "$BUMP" != "major" ]] && BUMP="minor"
+done <<< "$COMMITS"
+
+case "$BUMP" in
+    major) ((MAJOR++)); MINOR=0; PATCH=0 ;;
+    minor) ((MINOR++)); PATCH=0 ;;
+    patch) ((PATCH++)) ;;
+esac
+
+NEW_VERSION="r${MAJOR}.${MINOR}.${PATCH}"
+
+echo "current: r${CURRENT:-0.0.0}"
+echo "bump:    $BUMP"
+echo "next:    $NEW_VERSION"
+
+if [[ $APPLY -eq 1 ]]; then
+    echo ""
+    echo "starting git flow release..."
+    git flow release start "${MAJOR}.${MINOR}.${PATCH}" || exit 1
+    echo ""
+    echo "release branch created: rel/${MAJOR}.${MINOR}.${PATCH}"
+    echo "when ready: git flow release finish '${MAJOR}.${MINOR}.${PATCH}'"
+fi

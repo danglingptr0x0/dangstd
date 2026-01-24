@@ -1,0 +1,123 @@
+#!/usr/bin/env zsh
+
+COMMIT_MSG_FILE="$1"
+COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
+GIT_DIR=$(git rev-parse --git-dir)
+SCOPE_FILE="$GIT_DIR/COMMIT_SCOPE"
+
+[[ -f "$GIT_DIR/MERGE_HEAD" ]] && exit 0
+
+ERRORS=""
+TYPES="feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert"
+
+MSG_LEN=${#COMMIT_MSG}
+if [[ $MSG_LEN -lt 75 || $MSG_LEN -gt 100 ]]; then
+    ERRORS+="error: commit message length must be 75-100 characters\n\n"
+    ERRORS+="current length: $MSG_LEN\n"
+    ERRORS+="message: $COMMIT_MSG\n\n"
+fi
+
+if [[ ! "$COMMIT_MSG" =~ "^($TYPES)\(([^)]+)\): .{10,}$" ]]; then
+    ERRORS+="error: invalid commit message format\n\n"
+    ERRORS+="expected: type(scope): description\n"
+    ERRORS+="got:      $COMMIT_MSG\n\n"
+    ERRORS+="types: feat fix hot rel misc docs refactor test chore perf ci build revert\n"
+    ERRORS+="scope: must match path of staged files (e.g., engine/render/vma)\n"
+    ERRORS+="description: min 10 characters; total 75-100 chars\n\n"
+    ERRORS+="example: fix(engine/render/vma): leak at line 142 due to missing free\n\n"
+else
+    MSG_SCOPE="${match[2]}"
+fi
+
+FULL_MSG=$(cat "$COMMIT_MSG_FILE")
+if [[ "$FULL_MSG" =~ "[Cc]o-[Aa]uthored-[Bb]y:|[Ss]igned-[Oo]ff-[Bb]y:|[Rr]eviewed-[Bb]y:|[Aa]cked-[Bb]y:|[Tt]ested-[Bb]y:|[Rr]eported-[Bb]y:|[Hh]elped-[Bb]y:" ]]; then
+    ERRORS+="error: git trailers are not allowed\n\n"
+    ERRORS+="remove: Co-Authored-By, Signed-off-by, Reviewed-by, etc.\n"
+    ERRORS+="commits must be single-author, inline message only\n\n"
+fi
+
+if [[ "$FULL_MSG" =~ @[a-zA-Z0-9_-]+ ]]; then
+    ERRORS+="error: @user mentions are not allowed\n\n"
+    ERRORS+="remove all @username references from commit message\n\n"
+fi
+
+C_STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h)$' || true)
+if [[ -n "$C_STAGED" ]]; then
+    C_WITH_DEPS="$C_STAGED"
+    for f in ${(f)C_STAGED}; do
+        dir=$(dirname "$f")
+        headers=$(grep -E '^#include\s+"[^"]+"' "$f" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' || true)
+        for h in ${(f)headers}; do
+            [[ -f "$dir/$h" ]] && C_WITH_DEPS+=$'\n'"$dir/$h"
+        done
+    done
+    SYMBOLS=$(echo "$C_WITH_DEPS" | sort -u | xargs -r ctags -x --c-kinds=fvtsgeum 2>/dev/null | awk '{print $1}' | sort -u)
+    WORD_OVERRIDES=()
+    if [[ "$COMMIT_MSG" =~ w: ]]; then
+        OVERRIDE_TMP=$(echo "$COMMIT_MSG" | grep -oE 'w:[a-zA-Z0-9_]+' | sed 's/w://')
+        WORD_OVERRIDES=(${(f)OVERRIDE_TMP})
+    fi
+
+    MSG_DESC="${COMMIT_MSG#*: }"
+
+    UNQUOTED=""
+    for sym in ${(f)SYMBOLS}; do
+        [[ ${#sym} -lt 3 ]] && continue
+        [[ "$sym" == "main" ]] && continue
+        [[ ${WORD_OVERRIDES[(ie)$sym]} -le ${#WORD_OVERRIDES} ]] && continue
+        if [[ "$MSG_DESC" =~ "(^|[^a-zA-Z0-9_\`])${sym}([^a-zA-Z0-9_\`]|$)" ]] && \
+           [[ ! "$MSG_DESC" =~ "\`${sym}\`" ]]; then
+            UNQUOTED+="$sym"$'\n'
+        fi
+    done
+    if [[ -n "$UNQUOTED" ]]; then
+        ERRORS+="error: code symbols in commit message must be in backticks\n\n"
+        ERRORS+="unticked symbols found:\n"
+        ERRORS+="$(echo "$UNQUOTED" | sed '/^$/d' | sed 's/^/  /')\n\n"
+        ERRORS+="wrap code symbols in backticks: \`symbol_name\`\n"
+        ERRORS+="for false positives, use w:word override in commit message\n\n"
+    fi
+fi
+
+if [[ -f "$SCOPE_FILE" ]]; then
+    EXPECTED_SCOPE=$(cat "$SCOPE_FILE")
+    rm -f "$SCOPE_FILE"
+
+    if [[ -n "$MSG_SCOPE" && "$MSG_SCOPE" != "$EXPECTED_SCOPE" ]]; then
+        ERRORS+="error: scope mismatch\n\n"
+        ERRORS+="commit message scope: $MSG_SCOPE\n"
+        ERRORS+="staged files scope:   $EXPECTED_SCOPE\n\n"
+        ERRORS+="scope must match the path of staged files\n\n"
+    fi
+fi
+
+MSG_DESC="${COMMIT_MSG#*: }"
+MSG_CLEAN=$(echo "$MSG_DESC" | sed -e 's/`[^`]*`/code/g' -e 's/"[^"]*"/quoted/g' -e 's/w:\([a-zA-Z0-9_]*\)/\1/g' -e 's/  */ /g')
+
+if [[ ${#MSG_CLEAN} -ge 10 ]]; then
+    TECHNICAL="init|alloc|fmt|sizeof|dealloc|main|usage|cleanup|gen|eval|transpile|vreg|instr|x86|cmp|def|config|tokenize|cb|str|rm|api|cli|ctx|ptr|buf|idx|len|src|dst|err|ret|func|funcs|impl|refactor|todo|fixme|wip|mutex|sync|async|param|arg|args|null|nullptr|bool|int|uint|enum|struct|typedef|ifdef|endif|pragma|const|static|extern|inline|volatile|malloc|calloc|realloc|free|memset|memcpy|memmove|strcmp|strlen|strdup|sprintf|printf|fprintf|stderr|stdout|stdin|fopen|fclose|fread|fwrite|fseek|ftell|errno|posix|pthread|mutex|cond|semaphore|socket|recv|send|bind|listen|accept|poll|epoll|ioctl|mmap|munmap|brk|sbrk|timeframe|queueing|rho|lambda|lq|psi|ctx|sample|stats|compute|rolling|linreg"
+    LT_DISABLE="UPPERCASE_SENTENCE_START,COMMA_PARENTHESIS_WHITESPACE,WHITESPACE_RULE,EN_QUOTES,CONSECUTIVE_SPACES"
+
+    if command -v vale &>/dev/null; then
+        VALE_CFG="$HOME/.config/vale/.vale.ini"
+        if [[ -f "$VALE_CFG" ]]; then
+            VALE_OUT=$(echo "$MSG_CLEAN" | vale --config="$VALE_CFG" --output=line 2>&1 | grep -vE "($TECHNICAL)" || true)
+            [[ -n "$VALE_OUT" ]] && ERRORS+="vale (commit message):\n$VALE_OUT\n\n"
+        fi
+    fi
+
+    if command -v languagetool &>/dev/null; then
+        LT_OUT=$(echo "$MSG_CLEAN" | languagetool --language en-US --disable "$LT_DISABLE,MORFOLOGIK_RULE_EN_US" 2>&1 | grep -vE "^Expected text|^Working on|^Time:|^$|premium:" || true)
+        [[ -n "$LT_OUT" ]] && ERRORS+="languagetool (commit message):\n$LT_OUT\n\n"
+    fi
+fi
+
+if [[ -n "$ERRORS" ]]; then
+    echo -e "$ERRORS"
+    exit 1
+fi
+
+CLEANED_MSG=$(cat "$COMMIT_MSG_FILE" | sed -E 's/w:[a-zA-Z0-9_]+//g' | sed 's/  */ /g' | sed 's/ $//')
+echo "$CLEANED_MSG" > "$COMMIT_MSG_FILE"
+
+exit 0

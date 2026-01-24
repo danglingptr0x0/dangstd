@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+
+git-cliff -o CHANGELOG.md 2>/dev/null
+git add CHANGELOG.md 2>/dev/null && git commit --no-verify -m "docs: update changelog" 2>/dev/null || true
+
+COMMIT_MSG_PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|misc)\(.+\): .+"
+RELEASE_TAG_PATTERN="^r[0-9]+\.[0-9]+\.[0-9]+$"
+LABEL_PATTERN="(TODO|FIXME|XXX|HACK|BUG|WARN|WARNING|ERR|ERROR|FUCK|FUCKME|FIX|TO-DO):"
+WIP_PATTERN="^(wip|WIP|fixup!|squash!)"
+
+while read local_ref local_sha remote_ref remote_sha; do
+    branch_name="${remote_ref#refs/heads/}"
+
+    if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+        range="$local_sha"
+    else
+        range="$remote_sha..$local_sha"
+    fi
+
+    LABELS_FOUND=$(git diff "$range" --unified=0 2>/dev/null | grep -iE "^\+.*$LABEL_PATTERN" | head -10)
+    if [[ -n "$LABELS_FOUND" ]]; then
+        echo "warn: pushing code with unresolved labels"
+        echo "$LABELS_FOUND" | sed 's/^/  /'
+        echo ""
+        echo "bypass: git push --no-verify"
+        echo ""
+    fi
+
+    WIP_COMMITS=$(git log --oneline "$range" 2>/dev/null | grep -iE "$WIP_PATTERN" | head -5)
+    if [[ -n "$WIP_COMMITS" ]]; then
+        echo "error: WIP/fixup/squash commits detected"
+        echo "$WIP_COMMITS" | sed 's/^/  /'
+        echo ""
+        echo "rebase to squash these before pushing"
+        echo "bypass: git push --no-verify"
+        exit 1
+    fi
+
+    if [[ "$branch_name" == "main" ]]; then
+        echo "error: direct pushes to 'main' are blocked"
+        echo "use: GitHub PR/merge"
+        exit 1
+    fi
+
+    if [[ "$branch_name" == "staging" ]]; then
+        if [[ "$remote_sha" == "0000000000000000000000000000000000000000" ]]; then
+            commits=$(git rev-list "$local_sha")
+        else
+            commits=$(git rev-list "$remote_sha..$local_sha")
+        fi
+
+        for commit in $commits; do
+            msg=$(git log -1 --format=%s "$commit")
+            if [[ "$msg" =~ ^Merge ]]; then
+                continue
+            fi
+            if [[ ! "$msg" =~ $COMMIT_MSG_PATTERN ]]; then
+                echo "error: commit $commit has invalid message format"
+                echo "  msg: $msg"
+                echo "  expected: type(scope): description"
+                exit 1
+            fi
+        done
+
+        latest_msg=$(git log -1 --format=%s "$local_sha")
+        tags_at_head=$(git tag --points-at "$local_sha" 2>/dev/null)
+        has_release_tag=0
+        for tag in $tags_at_head; do
+            if [[ "$tag" =~ $RELEASE_TAG_PATTERN ]]; then
+                has_release_tag=1
+                break
+            fi
+        done
+
+        if [[ "$latest_msg" =~ Merge\ tag\ \'r[0-9]+\.[0-9]+\.[0-9]+\' ]]; then
+            has_release_tag=1
+        fi
+
+        if [[ $has_release_tag -eq 0 ]]; then
+            echo "error: staging push requires a release tag"
+            echo "  latest commit: $latest_msg"
+            echo "use: git flow release finish <version>"
+            exit 1
+        fi
+
+        if command -v gitleaks &>/dev/null; then
+            gitleaks detect --log-opts="$remote_sha..$local_sha" --no-banner -v 2>&1
+            if [[ $? -ne 0 ]]; then
+                echo ""
+                echo "error: gitleaks detected secrets"
+                echo "bypass: git push --no-verify"
+                exit 1
+            fi
+        fi
+
+        if command -v trivy &>/dev/null; then
+            trivy fs --scanners vuln,license --exit-code 1 --severity HIGH,CRITICAL --quiet . 2>&1 || {
+                echo "error: trivy found vulnerabilities or license issues"
+                echo "bypass: git push --no-verify"
+                exit 1
+            }
+        fi
+
+        if [[ -f "CMakeLists.txt" ]]; then
+            echo "running tests with sanitizers..."
+            cmake -B build-san -DCMAKE_BUILD_TYPE=Debug \
+                -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer -g" \
+                -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" \
+                -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address,undefined" 2>&1 || {
+                echo "error: cmake configure failed"
+                echo "bypass: git push --no-verify"
+                exit 1
+            }
+            cmake --build build-san 2>&1 || {
+                echo "error: sanitizer build failed"
+                echo "bypass: git push --no-verify"
+                exit 1
+            }
+            ctest --test-dir build-san --output-on-failure 2>&1 || {
+                echo "error: sanitizer tests failed"
+                echo "bypass: git push --no-verify"
+                exit 1
+            }
+            rm -rf build-san
+        fi
+    fi
+done
+
+exit 0

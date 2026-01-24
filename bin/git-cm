@@ -1,0 +1,34 @@
+#!/usr/bin/env zsh
+
+[[ -z "$1" ]] && { echo "usage: git cm \"description\""; exit 1; }
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+[[ -z "$BRANCH" ]] && { echo "error: not on a branch"; exit 1; }
+
+TYPE=""
+SCOPE=""
+
+if [[ "$BRANCH" =~ ^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)/(.+)$ ]]; then
+    TYPE="${match[1]}"
+    SCOPE="${match[2]}"
+else
+    echo "error: branch '$BRANCH' doesn't match type/name pattern"
+    exit 1
+fi
+
+SCOPE="${SCOPE%%-*}"
+SCOPE="${SCOPE%%_*}"
+
+SCOPE_FILE="$(git rev-parse --git-dir)/COMMIT_SCOPE"
+[[ -f "$SCOPE_FILE" ]] && SCOPE=$(cat "$SCOPE_FILE")
+
+MSG="${TYPE}(${SCOPE}): $1"
+
+LEN=${#MSG}
+if [[ $LEN -lt 75 || $LEN -gt 100 ]]; then
+    echo "warn: message length $LEN (should be 75-100)"
+    echo "msg: $MSG"
+    echo ""
+fi
+
+git commit -m "$MSG"

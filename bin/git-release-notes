@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+TAG="${1:-$(git describe --tags --abbrev=0 2>/dev/null)}"
+
+if [[ -z "$TAG" ]]; then
+    echo "generating notes for all commits..."
+    git-cliff --unreleased
+else
+    echo "generating notes since $TAG..."
+    git-cliff --unreleased --tag "$TAG"
+fi

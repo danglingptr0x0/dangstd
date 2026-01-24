@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+UPSTREAM="$1"
+BRANCH="${2:-$(git symbolic-ref --short HEAD 2>/dev/null)}"
+
+[[ -z "$BRANCH" ]] && exit 0
+
+REMOTE_BRANCH=$(git for-each-ref --format='%(upstream:short)' "refs/heads/$BRANCH" 2>/dev/null)
+if [[ -n "$REMOTE_BRANCH" ]]; then
+    LOCAL_SHA=$(git rev-parse "$BRANCH" 2>/dev/null)
+    REMOTE_SHA=$(git rev-parse "$REMOTE_BRANCH" 2>/dev/null)
+
+    if [[ "$LOCAL_SHA" == "$REMOTE_SHA" ]] || git merge-base --is-ancestor "$LOCAL_SHA" "$REMOTE_BRANCH" 2>/dev/null; then
+        echo "warn: '$BRANCH' has been pushed to '$REMOTE_BRANCH'"
+        echo ""
+        echo "rebasing will rewrite history that others may have pulled"
+        echo "consider: git merge instead of rebase"
+        echo ""
+        echo -n "proceed anyway? [y/N] "
+        read -r response
+        [[ "$response" =~ ^[Yy]$ ]] || exit 1
+    fi
+fi
+
+if [[ "$BRANCH" == "main" || "$BRANCH" == "master" || "$BRANCH" == "staging" ]]; then
+    echo "error: rebasing '$BRANCH' is not allowed"
+    exit 1
+fi
+
+exit 0

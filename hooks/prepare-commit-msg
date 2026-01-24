@@ -1,0 +1,39 @@
+#!/usr/bin/env zsh
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+[[ "$COMMIT_SOURCE" == "merge" || "$COMMIT_SOURCE" == "squash" ]] && exit 0
+[[ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]] && exit 0
+
+CURRENT_MSG=$(cat "$COMMIT_MSG_FILE" 2>/dev/null)
+[[ "$CURRENT_MSG" =~ "^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)\\(" ]] && exit 0
+
+BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+[[ -z "$BRANCH" ]] && exit 0
+
+TYPE=""
+SCOPE=""
+
+if [[ "$BRANCH" =~ ^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)/(.+)$ ]]; then
+    TYPE="${match[1]}"
+    SCOPE="${match[2]}"
+else
+    exit 0
+fi
+
+SCOPE="${SCOPE%%-*}"
+SCOPE="${SCOPE%%_*}"
+
+SCOPE_FILE="$(git rev-parse --git-dir)/COMMIT_SCOPE"
+[[ -f "$SCOPE_FILE" ]] && SCOPE=$(cat "$SCOPE_FILE")
+
+TEMPLATE="${TYPE}(${SCOPE}): "
+
+TYPES="feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert"
+if [[ ! "$TEMPLATE" =~ "^($TYPES)\\([^)]+\\): $" ]]; then
+    echo "warn: auto-generated template invalid: $TEMPLATE" >&2
+    exit 0
+fi
+
+echo "${TEMPLATE}${CURRENT_MSG}" > "$COMMIT_MSG_FILE"

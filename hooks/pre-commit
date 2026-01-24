@@ -1,0 +1,284 @@
+#!/usr/bin/env zsh
+
+PROTECTED_BRANCHES="^(main|staging)$"
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
+GIT_DIR=$(git rev-parse --git-dir)
+
+if [[ "$CURRENT_BRANCH" =~ $PROTECTED_BRANCHES ]]; then
+    [[ -f "$GIT_DIR/MERGE_HEAD" ]] && exit 0
+    echo "error: direct commits to '$CURRENT_BRANCH' are blocked"
+    echo "use: git flow <type> start <name>"
+    exit 1
+fi
+
+VALID_PREFIXES="^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)/"
+if [[ -n "$CURRENT_BRANCH" && ! "$CURRENT_BRANCH" =~ $VALID_PREFIXES ]]; then
+    echo "error: invalid branch name '$CURRENT_BRANCH'"
+    echo ""
+    echo "valid prefixes: feat/ fix/ hot/ rel/ misc/ docs/ refactor/ test/ chore/ perf/ ci/ build/ revert/"
+    echo "example: feat/task-state, fix/null-deref, hot/security-patch"
+    exit 1
+fi
+
+ERRORS=""
+
+if [[ -f "CMakeLists.txt" ]]; then
+    if ! grep -qE '\-\-coverage|ftest-coverage|fprofile-arcs' CMakeLists.txt 2>/dev/null; then
+        ERRORS+="error: coverage instrumentation not configured\n\n"
+        ERRORS+="CMakeLists.txt must include coverage flags:\n"
+        ERRORS+="  set(CMAKE_C_FLAGS \"\${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage\")\n"
+        ERRORS+="  set(CMAKE_EXE_LINKER_FLAGS \"\${CMAKE_EXE_LINKER_FLAGS} --coverage\")\n\n"
+    fi
+fi
+
+C_STAGED_CHECK=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h|cpp|hpp)$' || true)
+if [[ -n "$C_STAGED_CHECK" ]]; then
+    STATE_FILE=".test-state"
+    COVERAGE_MIN=50
+    NEED_TESTS=1
+
+    if [[ -f "$STATE_FILE" ]]; then
+        source "$STATE_FILE"
+        CURRENT_HASH=$(find src source -name '*.[ch]' -o -name '*.cpp' -o -name '*.hpp' 2>/dev/null | sort | xargs sha256sum 2>/dev/null | sha256sum | cut -d' ' -f1)
+        if [[ "$CURRENT_HASH" == "$hash" ]] && (( $(echo "$coverage >= $COVERAGE_MIN" | bc -l 2>/dev/null || echo 0) )); then
+            echo "test state valid: hash matches, coverage ${coverage}%"
+            NEED_TESTS=0
+        fi
+    fi
+
+    if [[ $NEED_TESTS -eq 1 ]]; then
+        BUILD_DIR=""
+        [[ -f "build/Makefile" ]] && BUILD_DIR="build"
+        [[ -f "Makefile" && -z "$BUILD_DIR" ]] && BUILD_DIR="."
+
+        if [[ -n "$BUILD_DIR" ]]; then
+            echo "running tests for staged C files..."
+            TEST_OUT=$(make -C "$BUILD_DIR" tests-run 2>&1)
+            TEST_RC=$?
+
+            if [[ $TEST_RC -ne 0 ]]; then
+                ERRORS+="error: tests failed\n\n"
+                ERRORS+="$(echo "$TEST_OUT" | tail -30)\n\n"
+            fi
+
+            if [[ -f "$BUILD_DIR/coverage.info" ]] && command -v lcov &>/dev/null; then
+                C_SOURCE_FILES=$(echo "$C_STAGED_CHECK" | grep -E '\.c$' || true)
+                LOW_COVERAGE=""
+                while IFS= read -r file; do
+                    [[ -z "$file" ]] && continue
+                    FILE_COV=$(lcov --summary "$BUILD_DIR/coverage.info" --include "*/$file" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
+                    [[ -z "$FILE_COV" ]] && FILE_COV="0"
+                    if (( $(echo "$FILE_COV < $COVERAGE_MIN" | bc -l 2>/dev/null || echo 1) )); then
+                        LOW_COVERAGE+="  $file: ${FILE_COV}%\n"
+                    fi
+                done <<< "$C_SOURCE_FILES"
+
+                if [[ -n "$LOW_COVERAGE" ]]; then
+                    ERRORS+="error: staged files below ${COVERAGE_MIN}% coverage\n\n"
+                    ERRORS+="$LOW_COVERAGE\n"
+                    ERRORS+="add tests to increase coverage\n\n"
+                fi
+
+                if [[ -z "$ERRORS" ]]; then
+                    TOTAL_COV=$(lcov --summary "$BUILD_DIR/coverage.info" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
+                    CURRENT_HASH=$(find src source -name '*.[ch]' -o -name '*.cpp' -o -name '*.hpp' 2>/dev/null | sort | xargs sha256sum 2>/dev/null | sha256sum | cut -d' ' -f1)
+                    echo "hash=$CURRENT_HASH" > "$STATE_FILE"
+                    echo "coverage=$TOTAL_COV" >> "$STATE_FILE"
+                    echo "timestamp=$(date -Iseconds)" >> "$STATE_FILE"
+                    echo "saved test state: coverage ${TOTAL_COV}%"
+                fi
+            fi
+        fi
+    fi
+fi
+
+BANNED_EXT="\.(so|a|o|dylib|dll|exe|bin|out|class|jar|pyc|pyo|whl|egg|png|jpg|jpeg|gif|bmp|ico|tiff|webp|mp3|mp4|wav|avi|mov|mkv|pdf|doc|docx|xls|xlsx|ppt|pptx|zip|tar|gz|bz2|xz|7z|rar|iso|dmg|pkg|deb|rpm)$"
+BANNED_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -iE "$BANNED_EXT" || true)
+if [[ -n "$BANNED_FILES" ]]; then
+    ERRORS+="error: binary/media files not allowed in commits\n\n"
+    ERRORS+="$(echo "$BANNED_FILES" | sed 's/^/  /')\n\n"
+    ERRORS+="use git-lfs for large/binary files\n\n"
+fi
+
+ELF_FILES=""
+for f in $(git diff --cached --name-only --diff-filter=ACMR 2>/dev/null); do
+    [[ -f "$f" ]] && file "$f" 2>/dev/null | grep -q "ELF" && ELF_FILES+="  $f\n"
+done
+if [[ -n "$ELF_FILES" ]]; then
+    ERRORS+="error: ELF binaries not allowed in commits\n\n"
+    ERRORS+="$ELF_FILES\n"
+fi
+
+UNCRUSTIFY_CFG="$HOME/git/.uncrustify.cfg"
+if [[ -f "$UNCRUSTIFY_CFG" ]] && command -v uncrustify &>/dev/null; then
+    C_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(c|h)$' || true)
+    if [[ -n "$C_FILES" ]]; then
+        echo "$C_FILES" | while IFS= read -r file; do
+            uncrustify -c "$UNCRUSTIFY_CFG" --no-backup -q "$file"
+            git add "$file"
+        done
+    fi
+fi
+
+C_STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h)$' || true)
+if [[ -n "$C_STAGED" ]]; then
+    INVALID=$(echo "$C_STAGED" | xargs -r ctags -x --c-kinds=f 2>/dev/null | awk '{print $1, $3, $4}' | python3 -c '
+import re, sys
+from nltk.corpus import wordnet as wn
+def split_name(n):
+    return n.lower().split("_") if "_" in n else re.sub("([A-Z])", r" \1", n).strip().lower().split()
+TECHNICAL = {"init", "alloc", "fmt", "sizeof", "dealloc", "main", "usage", "cleanup", "gen", "eval", "transpile", "vreg", "instr", "x86", "cmp", "def", "config", "tokenize", "cb", "str", "rm"}
+def is_verb(w):
+    return w in TECHNICAL or "v" in {s.pos() for s in wn.synsets(w)}
+def suggest(words):
+    for i, w in enumerate(words):
+        if is_verb(w):
+            reordered = words[:i] + words[i+1:] + [w]
+            return "_".join(reordered)
+    return None
+for line in sys.stdin:
+    parts = line.strip().split()
+    if len(parts) < 3:
+        continue
+    name, line_num, file = parts[0], parts[1], parts[2]
+    words = split_name(name)
+    if words and not is_verb(words[-1]):
+        print(f"{file}:{line_num}: function name does not end with verb: {name}")
+        fix = suggest(words)
+        if fix:
+            print(f"  suggestion: {fix}")
+        else:
+            print(f"  last word \"{words[-1]}\" is not a verb, no verb found in name")
+        print("")
+' 2>/dev/null || true)
+    if [[ -n "$INVALID" ]]; then
+        ERRORS+="error: function names must end with a verb\n\n$INVALID\n"
+    fi
+fi
+
+if [[ -n "$C_STAGED" ]] && command -v cppcheck &>/dev/null; then
+    SRC_DIRS=""
+    [[ -d "src" ]] && SRC_DIRS="src"
+    [[ -d "source" ]] && SRC_DIRS="source"
+    [[ -d "include" ]] && SRC_DIRS="$SRC_DIRS include"
+    if [[ -n "$SRC_DIRS" ]]; then
+        STAGED_PATTERN=$(echo "$C_STAGED" | tr '\n' '|' | sed 's/|$//')
+        CPPCHECK_OUT=$(cppcheck --enable=warning,style,performance --error-exitcode=0 --quiet $SRC_DIRS 2>&1 | grep -E "^($STAGED_PATTERN):" | grep -v "^$" || true)
+        if [[ -n "$CPPCHECK_OUT" ]]; then
+            ERRORS+="cppcheck:\n$CPPCHECK_OUT\n\n"
+        fi
+    fi
+fi
+
+if [[ -n "$C_STAGED" ]] && command -v clang-tidy &>/dev/null; then
+    COMPILE_DB=""
+    [[ -f "compile_commands.json" ]] && COMPILE_DB="."
+    [[ -f "build/compile_commands.json" ]] && COMPILE_DB="build"
+    if [[ -n "$COMPILE_DB" ]]; then
+        TIDY_OUT=$(echo "$C_STAGED" | xargs -r clang-tidy -p "$COMPILE_DB" --quiet 2>&1 | grep -E "warning:|error:" | head -30 || true)
+        if [[ -n "$TIDY_OUT" ]]; then
+            ERRORS+="clang-tidy:\n$TIDY_OUT\n\n"
+        fi
+    fi
+fi
+
+if [[ -n "$C_STAGED" ]] && command -v lizard &>/dev/null; then
+    COMPLEX=$(echo "$C_STAGED" | xargs -r lizard -CCN15 -w 2>/dev/null | grep "!!!" || true)
+    if [[ -n "$COMPLEX" ]]; then
+        ERRORS+="complexity (CCN>15):\n$COMPLEX\n\n"
+    fi
+fi
+
+if [[ -n "$C_STAGED" ]] && command -v iwyu-tool &>/dev/null; then
+    COMPILE_DB=""
+    [[ -f "compile_commands.json" ]] && COMPILE_DB="."
+    [[ -f "build/compile_commands.json" ]] && COMPILE_DB="build"
+    if [[ -n "$COMPILE_DB" ]]; then
+        IWYU_OUT=$(echo "$C_STAGED" | xargs -r iwyu-tool -p "$COMPILE_DB" -j 1 -o clang 2>&1 | grep "superfluous" | sort -u | head -20 || true)
+        if [[ -n "$IWYU_OUT" ]]; then
+            ERRORS+="unused includes:\n$IWYU_OUT\n\n"
+        fi
+    fi
+fi
+
+PROSE_STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -iE '\.(md|txt|rst|adoc)$' | grep -v 'CMakeLists.txt' || true)
+VALE_FILTER="TooWordy|Profanity|Microsoft\.(Auto|Foreign|Avoid|Dashes)|Passive|Weasel|Condescending|Typography"
+LT_FILTER="MORFOLOGIK_RULE|WHITESPACE|COMMA_PARENTHESIS|UPPERCASE_SENTENCE|EN_QUOTES|premium:"
+if [[ -n "$PROSE_STAGED" ]] && command -v vale &>/dev/null; then
+    VALE_CFG="$HOME/.config/vale/.vale.ini"
+    if [[ -f "$VALE_CFG" ]]; then
+        VALE_OUT=$(echo "$PROSE_STAGED" | xargs -r vale --config="$VALE_CFG" --output=line 2>&1 | grep -vE "$VALE_FILTER" || true)
+        if [[ -n "$VALE_OUT" ]]; then
+            ERRORS+="vale (prose linting):\n$VALE_OUT\n\n"
+        fi
+    fi
+fi
+
+
+if [[ -n "$PROSE_STAGED" ]] && command -v harper-cli &>/dev/null; then
+    HARPER_OUT=""
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        LINT_COUNT=$(harper-cli lint --count "$file" 2>&1 | grep -oP '\d+(?= lints)' | head -1 || echo "0")
+        [[ "$LINT_COUNT" -gt 50 ]] && HARPER_OUT+="$file: $LINT_COUNT lints\n"
+    done <<< "$PROSE_STAGED"
+    if [[ -n "$HARPER_OUT" ]]; then
+        ERRORS+="harper:\n$HARPER_OUT\n"
+    fi
+fi
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMRD | grep "^src/" || true)
+
+if [[ -n "$STAGED_FILES" ]]; then
+    SCOPES=""
+    while IFS= read -r file; do
+        scope="${file#src/}"
+        depth=$(echo "$scope" | tr '/' '\n' | wc -l)
+        if [[ "$depth" -gt 3 ]]; then
+            scope=$(dirname "$scope")
+        else
+            scope="${scope%.*}"
+        fi
+        SCOPES="$SCOPES$scope"$'\n'
+    done <<< "$STAGED_FILES"
+
+    SUBSYSTEMS=$(echo "$SCOPES" | cut -d'/' -f1-2 | sort -u)
+    SUBSYSTEM_COUNT=$(echo "$SUBSYSTEMS" | grep -c . || echo 0)
+
+    if [[ "$SUBSYSTEM_COUNT" -gt 1 ]]; then
+        ERRORS+="error: cross-subsystem commit detected\n\n"
+        ERRORS+="staged files span multiple subsystems:\n"
+        ERRORS+="$(echo "$SUBSYSTEMS" | sed 's/^/  /')\n\n"
+        ERRORS+="commits must be atomic within a single subsystem\n"
+        ERRORS+="split into separate commits per subsystem\n\n"
+    fi
+
+    MODULES=$(echo "$SCOPES" | sort -u)
+    MODULE_COUNT=$(echo "$MODULES" | grep -c . || echo 0)
+
+    if [[ "$MODULE_COUNT" -gt 1 ]]; then
+        ERRORS+="error: cross-module commit detected\n\n"
+        ERRORS+="staged files span multiple modules:\n"
+        ERRORS+="$(echo "$MODULES" | sed 's/^/  /')\n\n"
+        ERRORS+="commits must be atomic within a single module\n"
+        ERRORS+="split into separate commits per module\n\n"
+    fi
+
+    if [[ -z "$ERRORS" ]]; then
+        SCOPE=$(echo "$SCOPES" | head -n1 | tr -d '\n')
+        SCOPE_DIR=$(dirname "$SCOPE")
+        SCOPE_BASE=$(basename "$SCOPE")
+        SCOPE_PARENT=$(basename "$SCOPE_DIR")
+        if [[ "$SCOPE_BASE" == "$SCOPE_PARENT" ]]; then
+            SCOPE="$SCOPE_DIR"
+        fi
+        echo "$SCOPE" > "$(git rev-parse --git-dir)/COMMIT_SCOPE"
+    fi
+fi
+
+if [[ -n "$ERRORS" ]]; then
+    echo -e "$ERRORS"
+    exit 1
+fi
+
+exit 0
