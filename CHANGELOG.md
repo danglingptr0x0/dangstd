@@ -11,3 +11,4 @@
 ### 📚 Documentation
 
 - Update changelog
+- Update changelog
