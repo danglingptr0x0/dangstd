@@ -80,12 +80,7 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
                 fi
 
                 if [[ -z "$ERRORS" ]]; then
-                    TOTAL_COV=$(lcov --summary "$BUILD_DIR/coverage.info" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
-                    CURRENT_HASH=$(find src source -name '*.[ch]' -o -name '*.cpp' -o -name '*.hpp' 2>/dev/null | sort | xargs sha256sum 2>/dev/null | sha256sum | cut -d' ' -f1)
-                    echo "hash=$CURRENT_HASH" > "$STATE_FILE"
-                    echo "coverage=$TOTAL_COV" >> "$STATE_FILE"
-                    echo "timestamp=$(date -Iseconds)" >> "$STATE_FILE"
-                    echo "saved test state: coverage ${TOTAL_COV}%"
+                    git test-state save
                 fi
             fi
         fi

@@ -93,30 +93,47 @@ All code SHALL be tested with minimum 50% coverage before committing.
 | `git test-state save` | Record source hash + coverage after tests pass |
 | `git test-state check` | Verify current code matches last tested state |
 
-**Workflow:**
-```bash
-cmake -B build && cmake --build build
-make -C build tests-run
-git test-state save
-git add -A && git commit
-```
-
 | Target | Function |
 |--------|----------|
 | `make tests` | Build all test executables (no run) |
-| `make tests-run` | Build tests if needed, run ctest, generate coverage |
+| `make tests-run` | Build tests, run ctest, generate coverage, save test state |
 
-- Pre-commit hook automatically runs `git test-state check`
-- Pre-commit hook blocks commits if CMakeLists.txt lacks coverage flags
-- Coverage instrumentation is mandatory for all C/C++ projects
-- State stored in `.test-state` (add to `.gitignore`)
-- Coverage report generated in `build/coverage_html/`
+**Automated Workflow:**
+```bash
+cmake -B build && cmake --build build
+git add -A && git commit
+```
 
-**Required CMakeLists.txt configuration:**
+The pre-commit hook automatically:
+1. Checks if `.test-state` hash matches current source
+2. If invalid, runs `make tests-run` to execute tests and generate coverage
+3. Verifies staged `.c` files have minimum 50% coverage
+4. Saves test state via `git test-state save` on success
+5. Blocks commit if tests fail or coverage is insufficient
+
+**Build Invalidation:**
+
+CMakeLists.txt SHALL include a target to invalidate test state on recompilation:
+```cmake
+add_custom_target(invalidate-test-state
+    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/.test-state
+    COMMENT "Invalidating test state"
+)
+add_dependencies(main_target invalidate-test-state)
+```
+
+**Coverage Configuration:**
+
+CMakeLists.txt SHALL include coverage instrumentation:
 ```cmake
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 ```
+
+**Test State File:**
+- State stored in `.test-state` (globally ignored via `~/.config/git/ignore`)
+- Coverage report generated in `build/coverage_html/`
+- Pre-commit hook blocks commits if CMakeLists.txt lacks coverage flags
 
 ### 2.8 Git Flow
 
@@ -456,3 +473,4 @@ Non-prefixed aliases: `byte_t`, `word_t`, `dword_t`, `qword_t`
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-01-23 | Initial specification |
+| 1.1 | 2026-01-24 | Automated test state tracking; global gitignore for `.test-state` |
