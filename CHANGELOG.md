@@ -7,3 +7,7 @@
 - *(init)* Add cocci patches; add global ignore; automate test state in pre-commit
 - *(init)* Docs: update changelog
 - *(init)* Path fix in test hashes call
+
+### 📚 Documentation
+
+- Update changelog
