@@ -73,7 +73,7 @@ cmd_check() {
         return 1
     fi
 
-    echo "test state OK: hash matches, coverage ${coverage}%"
+    echo "test state A-OK: hash matches; coverage: ${coverage}%"
     return 0
 }
 

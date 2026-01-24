@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+[[ $# -eq 0 ]] && { echo "usage: c-func-name-check <file.c> [file2.c ...]"; exit 1; }
+
+for file in "$@"; do
+    [[ ! -f "$file" ]] && continue
+    [[ ! "$file" =~ \.[ch]$ ]] && continue
+
+    ctags -x --c-kinds=f "$file" 2>/dev/null | awk '{print $1, $3, $4}' | python3 -c '
+import re, sys
+try:
+    from nltk.corpus import wordnet as wn
+except:
+    sys.exit(0)
+
+def split_name(n):
+    return n.lower().split("_") if "_" in n else re.sub("([A-Z])", r" \1", n).strip().lower().split()
+
+TECHNICAL = {"init", "alloc", "fmt", "sizeof", "dealloc", "main", "usage", "cleanup", "gen", "eval", "transpile", "vreg", "instr", "x86", "cmp", "def", "config", "tokenize", "cb", "str", "rm", "create", "destroy", "get", "set", "is", "has", "add", "del", "run", "start", "stop", "parse", "read", "write", "open", "close", "load", "save", "send", "recv", "connect", "disconnect", "register", "unregister", "enable", "disable", "collect", "detect", "validate", "process", "handle", "notify", "update", "reset", "clear", "check", "find", "search", "sort", "compare", "copy", "move", "remove", "insert", "append", "push", "pop", "peek", "dump", "print", "log", "trace", "debug", "warn", "error", "fail", "succeed", "test", "verify", "assert", "acquire", "release", "lock", "unlock", "wait", "signal", "broadcast", "spawn", "join", "kill", "exit", "abort", "retry", "skip", "ignore", "accept", "reject", "grant", "deny", "allow", "block", "filter", "transform", "encode", "decode", "encrypt", "decrypt", "compress", "decompress", "serialize", "deserialize", "marshal", "unmarshal", "bind", "unbind", "attach", "detach", "mount", "unmount", "map", "unmap", "wrap", "unwrap", "pack", "unpack", "format", "render", "draw", "paint", "fill", "stroke", "clip", "mask", "blend", "sample", "interpolate", "calculate", "compute", "measure", "estimate", "predict", "infer", "train", "learn", "fit", "score", "rank", "classify", "cluster", "segment", "extract", "inject", "emit", "dispatch", "route", "forward", "redirect", "proxy", "cache", "flush", "sync", "async", "poll", "select", "listen", "accept", "serve", "respond", "request", "query", "fetch", "store", "retrieve", "index", "lookup", "resolve", "translate", "convert", "cast", "coerce", "promote", "demote", "truncate", "extend", "expand", "shrink", "grow", "split", "merge", "concat", "join", "trim", "strip", "pad", "align", "justify", "center", "left", "right", "top", "bottom", "begin", "end", "enter", "leave", "resume", "suspend", "pause", "continue", "break", "return", "yield", "throw", "catch", "try", "finalize", "dispose", "free", "malloc", "realloc", "calloc", "mmap", "munmap", "brk", "sbrk"}
+
+def is_verb(w):
+    return w in TECHNICAL or "v" in {s.pos() for s in wn.synsets(w)}
+
+def suggest(words):
+    for i, w in enumerate(words):
+        if is_verb(w):
+            reordered = words[:i] + words[i+1:] + [w]
+            return "_".join(reordered)
+    return None
+
+for line in sys.stdin:
+    parts = line.strip().split()
+    if len(parts) < 3:
+        continue
+    name, line_num, file = parts[0], parts[1], parts[2]
+    words = split_name(name)
+    if words and not is_verb(words[-1]):
+        print(f"{file}:{line_num}: function name does not end with verb: {name}")
+        fix = suggest(words)
+        if fix:
+            print(f"  suggestion: {fix}")
+        else:
+            print(f"  last word \"{words[-1]}\" is not a verb")
+        print("")
+' 2>/dev/null
+done

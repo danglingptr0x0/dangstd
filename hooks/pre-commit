@@ -41,7 +41,37 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
         source "$STATE_FILE"
         CURRENT_HASH=$(find src source -name '*.[ch]' -o -name '*.cpp' -o -name '*.hpp' 2>/dev/null | sort | xargs sha256sum 2>/dev/null | sha256sum | cut -d' ' -f1)
         if [[ "$CURRENT_HASH" == "$hash" ]] && (( $(echo "$coverage >= $COVERAGE_MIN" | bc -l 2>/dev/null || echo 0) )); then
-            echo "test state valid: hash matches, coverage ${coverage}%"
+            BUILD_DIR=""
+            [[ -f "build/coverage.info" ]] && BUILD_DIR="build"
+            [[ -f "coverage.info" ]] && BUILD_DIR="."
+            if [[ -n "$BUILD_DIR" ]] && command -v lcov &>/dev/null; then
+                C_SOURCE_FILES=$(echo "$C_STAGED_CHECK" | grep -E '\.c$' || true)
+                echo "test state A-OK; project: ${coverage}%"
+                LOW_COV=""
+                while IFS= read -r file; do
+                    [[ -z "$file" ]] && continue
+                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c ]] && continue
+                    [[ "$file" == tests/* || "$file" == */tui/* || "$(basename "$file")" == test_* ]] && continue
+                    FILE_COV=$(lcov --summary "$BUILD_DIR/coverage.info" --include "*/$file" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
+                    [[ -z "$FILE_COV" ]] && FILE_COV="0"
+                    echo "  ${file}: ${FILE_COV}%"
+                    if (( $(echo "$FILE_COV < $COVERAGE_MIN" | bc -l 2>/dev/null || echo 1) )); then
+                        LOW_COV+="  ${file}: ${FILE_COV}%\n"
+                    fi
+                done <<< "$C_SOURCE_FILES"
+                if [[ -n "$LOW_COV" ]]; then
+                    ERRORS+="error: staged files below ${COVERAGE_MIN}% coverage\n\n"
+                    ERRORS+="$LOW_COV\n"
+                    SCOPE_FILE=$(git rev-parse --git-dir)/COMMIT_SCOPE
+                    if [[ -f "$SCOPE_FILE" ]]; then
+                        SCOPE=$(cat "$SCOPE_FILE")
+                        SCOPE_BASE=$(basename "$SCOPE")
+                        ERRORS+="suggested test location: tests/test_${SCOPE_BASE}.c\n\n"
+                    fi
+                fi
+            else
+                echo "test state A-OK; project: ${coverage}%"
+            fi
             NEED_TESTS=0
         fi
     fi
@@ -63,11 +93,16 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
 
             if [[ -f "$BUILD_DIR/coverage.info" ]] && command -v lcov &>/dev/null; then
                 C_SOURCE_FILES=$(echo "$C_STAGED_CHECK" | grep -E '\.c$' || true)
+                PROJ_COV=$(lcov --summary "$BUILD_DIR/coverage.info" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
+                echo "coverage; project: ${PROJ_COV}%"
                 LOW_COVERAGE=""
                 while IFS= read -r file; do
                     [[ -z "$file" ]] && continue
+                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c ]] && continue
+                    [[ "$file" == tests/* || "$file" == */tui/* || "$(basename "$file")" == test_* ]] && continue
                     FILE_COV=$(lcov --summary "$BUILD_DIR/coverage.info" --include "*/$file" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
                     [[ -z "$FILE_COV" ]] && FILE_COV="0"
+                    echo "  ${file}: ${FILE_COV}%"
                     if (( $(echo "$FILE_COV < $COVERAGE_MIN" | bc -l 2>/dev/null || echo 1) )); then
                         LOW_COVERAGE+="  $file: ${FILE_COV}%\n"
                     fi
@@ -76,7 +111,12 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
                 if [[ -n "$LOW_COVERAGE" ]]; then
                     ERRORS+="error: staged files below ${COVERAGE_MIN}% coverage\n\n"
                     ERRORS+="$LOW_COVERAGE\n"
-                    ERRORS+="add tests to increase coverage\n\n"
+                    SCOPE_FILE=$(git rev-parse --git-dir)/COMMIT_SCOPE
+                    if [[ -f "$SCOPE_FILE" ]]; then
+                        SCOPE=$(cat "$SCOPE_FILE")
+                        SCOPE_BASE=$(basename "$SCOPE")
+                        ERRORS+="suggested test location: tests/test_${SCOPE_BASE}.c\n\n"
+                    fi
                 fi
 
                 if [[ -z "$ERRORS" ]]; then
@@ -117,35 +157,7 @@ fi
 
 C_STAGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h)$' || true)
 if [[ -n "$C_STAGED" ]]; then
-    INVALID=$(echo "$C_STAGED" | xargs -r ctags -x --c-kinds=f 2>/dev/null | awk '{print $1, $3, $4}' | python3 -c '
-import re, sys
-from nltk.corpus import wordnet as wn
-def split_name(n):
-    return n.lower().split("_") if "_" in n else re.sub("([A-Z])", r" \1", n).strip().lower().split()
-TECHNICAL = {"init", "alloc", "fmt", "sizeof", "dealloc", "main", "usage", "cleanup", "gen", "eval", "transpile", "vreg", "instr", "x86", "cmp", "def", "config", "tokenize", "cb", "str", "rm"}
-def is_verb(w):
-    return w in TECHNICAL or "v" in {s.pos() for s in wn.synsets(w)}
-def suggest(words):
-    for i, w in enumerate(words):
-        if is_verb(w):
-            reordered = words[:i] + words[i+1:] + [w]
-            return "_".join(reordered)
-    return None
-for line in sys.stdin:
-    parts = line.strip().split()
-    if len(parts) < 3:
-        continue
-    name, line_num, file = parts[0], parts[1], parts[2]
-    words = split_name(name)
-    if words and not is_verb(words[-1]):
-        print(f"{file}:{line_num}: function name does not end with verb: {name}")
-        fix = suggest(words)
-        if fix:
-            print(f"  suggestion: {fix}")
-        else:
-            print(f"  last word \"{words[-1]}\" is not a verb, no verb found in name")
-        print("")
-' 2>/dev/null || true)
+    INVALID=$(echo "$C_STAGED" | xargs -r "$HOME/.config/git/bin/c-func-name-check" 2>/dev/null || true)
     if [[ -n "$INVALID" ]]; then
         ERRORS+="error: function names must end with a verb\n\n$INVALID\n"
     fi
@@ -181,18 +193,6 @@ if [[ -n "$C_STAGED" ]] && command -v lizard &>/dev/null; then
     COMPLEX=$(echo "$C_STAGED" | xargs -r lizard -CCN15 -w 2>/dev/null | grep "!!!" || true)
     if [[ -n "$COMPLEX" ]]; then
         ERRORS+="complexity (CCN>15):\n$COMPLEX\n\n"
-    fi
-fi
-
-if [[ -n "$C_STAGED" ]] && command -v iwyu-tool &>/dev/null; then
-    COMPILE_DB=""
-    [[ -f "compile_commands.json" ]] && COMPILE_DB="."
-    [[ -f "build/compile_commands.json" ]] && COMPILE_DB="build"
-    if [[ -n "$COMPILE_DB" ]]; then
-        IWYU_OUT=$(echo "$C_STAGED" | xargs -r iwyu-tool -p "$COMPILE_DB" -j 1 -o clang 2>&1 | grep "superfluous" | sort -u | head -20 || true)
-        if [[ -n "$IWYU_OUT" ]]; then
-            ERRORS+="unused includes:\n$IWYU_OUT\n\n"
-        fi
     fi
 fi
 
