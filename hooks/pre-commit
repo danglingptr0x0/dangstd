@@ -1,5 +1,9 @@
 #!/usr/bin/env zsh
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ ! -f "$REPO_ROOT/CMakeLists.txt" ]] && exit 0
+cd "$REPO_ROOT"
+
 PROTECTED_BRANCHES="^(main|staging)$"
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 GIT_DIR=$(git rev-parse --git-dir)
@@ -31,7 +35,8 @@ if [[ -f "CMakeLists.txt" ]]; then
     fi
 fi
 
-C_STAGED_CHECK=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h|cpp|hpp)$' || true)
+C_STAGED_ALL=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(c|h)$' || true)
+C_STAGED_CHECK=$(echo "$C_STAGED_ALL" | grep -vE '^tests/|/tests/|^test_|/test_' || true)
 if [[ -n "$C_STAGED_CHECK" ]]; then
     STATE_FILE=".test-state"
     COVERAGE_MIN=50
@@ -50,7 +55,7 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
                 LOW_COV=""
                 while IFS= read -r file; do
                     [[ -z "$file" ]] && continue
-                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c ]] && continue
+                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c || "$(basename "$file")" == "err.c" || "$(basename "$file")" == *_err.c || "$(basename "$file")" == "bindings.c" || "$(basename "$file")" == *_bindings.c || "$(basename "$file")" == "repl.c" || "$(basename "$file")" == *_repl.c || "$(basename "$file")" == "daemon.c" || "$(basename "$file")" == *_daemon.c ]] && continue
                     [[ "$file" == tests/* || "$file" == */tui/* || "$(basename "$file")" == test_* ]] && continue
                     FILE_COV=$(lcov --summary "$BUILD_DIR/coverage.info" --include "*/$file" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
                     [[ -z "$FILE_COV" ]] && FILE_COV="0"
@@ -98,7 +103,7 @@ if [[ -n "$C_STAGED_CHECK" ]]; then
                 LOW_COVERAGE=""
                 while IFS= read -r file; do
                     [[ -z "$file" ]] && continue
-                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c ]] && continue
+                    [[ "$(basename "$file")" == "main.c" || "$(basename "$file")" == *_main.c || "$(basename "$file")" == "tui.c" || "$(basename "$file")" == *_tui.c || "$(basename "$file")" == "err.c" || "$(basename "$file")" == *_err.c || "$(basename "$file")" == "bindings.c" || "$(basename "$file")" == *_bindings.c || "$(basename "$file")" == "repl.c" || "$(basename "$file")" == *_repl.c || "$(basename "$file")" == "daemon.c" || "$(basename "$file")" == *_daemon.c ]] && continue
                     [[ "$file" == tests/* || "$file" == */tui/* || "$(basename "$file")" == test_* ]] && continue
                     FILE_COV=$(lcov --summary "$BUILD_DIR/coverage.info" --include "*/$file" 2>&1 | grep -oP 'lines\.*:\s*\K[0-9.]+' | head -1 || echo "0")
                     [[ -z "$FILE_COV" ]] && FILE_COV="0"

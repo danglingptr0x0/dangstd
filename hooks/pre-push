@@ -1,7 +1,18 @@
 #!/usr/bin/env bash
 
-git-cliff -o CHANGELOG.md 2>/dev/null
-git add CHANGELOG.md 2>/dev/null && git commit --no-verify -m "docs: update changelog" 2>/dev/null || true
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ ! -f "$REPO_ROOT/CMakeLists.txt" ]] && exit 0
+cd "$REPO_ROOT"
+
+echo -n "Generate and commit changelog? [y/N] "
+read -r response
+[[ "$response" != "y" && "$response" != "Y" ]] && {
+    # Continue with rest of pre-push checks without changelog
+    :
+} || {
+    git-cliff -o CHANGELOG.md 2>/dev/null
+    git add CHANGELOG.md 2>/dev/null && git commit --no-verify -m "docs: update changelog" 2>/dev/null || true
+}
 
 COMMIT_MSG_PATTERN="^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|misc)\(.+\): .+"
 RELEASE_TAG_PATTERN="^r[0-9]+\.[0-9]+\.[0-9]+$"

@@ -40,7 +40,6 @@ Scripts SHALL be located at `~/.config/git/bin/` and added to PATH.
 
 | Command | Function |
 |---------|----------|
-| `git cm "desc"` | Commit with auto-prefix derived from branch name |
 | `git bump` | Display next semantic version from conventional commits |
 | `git bump --apply` | Initiate git flow release with calculated version |
 | `git release-notes` | Generate changelog via git-cliff |
@@ -96,7 +95,7 @@ All code SHALL be tested with minimum 50% coverage before committing.
 | Target | Function |
 |--------|----------|
 | `make tests` | Build all test executables (no run) |
-| `make tests-run` | Build tests, run ctest, generate coverage, save test state |
+| `make tests-run` | Build tests, run ctest via QEMU (§2.10), generate coverage, save test state |
 
 **Automated Workflow:**
 ```bash
@@ -135,7 +134,11 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 - Coverage report generated in `build/coverage_html/`
 - Pre-commit hook blocks commits if CMakeLists.txt lacks coverage flags
 
-### 2.8 Git Flow
+### 2.8 Git Invocation
+
+`git -C <path>` SHALL NOT be used. All git commands SHALL be run from the repository base directory.
+
+### 2.9 Git Flow
 
 ```bash
 git flow feature start name   # Creates feat/name
@@ -143,6 +146,185 @@ git flow feature finish name  # Merges to staging
 git flow release start 1.2.0  # Creates rel/1.2.0
 git flow release finish 1.2.0 # Merges and tags
 ```
+
+### 2.10 QEMU Test Execution
+
+Host-native test binary execution SHALL NOT be used. All test execution SHALL be performed inside persistent QEMU/KVM virtual machines managed by libvirt.
+
+#### 2.10.1 Rationale
+
+DKMS kernel modules SHALL NOT be tested on the host; a kernel module fault may panic the host. Userspace tests SHALL use the same execution path to maintain a single test infrastructure.
+
+#### 2.10.2 VM Architecture
+
+VMs SHALL be persistent, managed by `virsh`/`virt-install` via `qemu:///system`. VMs SHALL run continuously; the test runner connects via SSH per invocation.
+
+**VM Provisioning:**
+
+VMs SHALL be provisioned from cloud images via `cloud-init`. The creation script resides at `~/git/dangstd/cmake/qemu/create-vm.sh`:
+```bash
+create-vm.sh dev       # Arch Linux (development)
+create-vm.sh deploy    # Debian 12 (deployment compatibility)
+```
+
+**VM Naming Convention:** `qemu-test-{variant}-{arch}`
+
+**VM Variants:**
+
+| Variant | Base | Purpose |
+|---------|------|---------|
+| `dev` | Arch Linux (cloud image) | Matches host kernel, glibc, and toolchain; zero environment delta |
+| `deploy` | Debian 12 bookworm (cloud image) | Deployment compatibility against older glibc (2.36); static binaries only |
+
+The `dev` variant SHALL run the same kernel as the host (`linux-zen`). The kernel package SHALL be version-locked via `IgnorePkg` in `/etc/pacman.conf` on both host and VM.
+
+**VM Configuration:**
+
+| Parameter | Value |
+|-----------|-------|
+| vCPUs | 12 |
+| RAM | 4096 MiB |
+| Disk | 20 GiB (qcow2) |
+| Network | libvirt default (NAT) |
+| SSH | Passphrase-less RSA 8192 key at `~/.ssh/id_qemu_test` |
+| sshd MaxStartups | 50:30:100 |
+| sshd MaxSessions | 50 |
+
+#### 2.10.3 Shared Library Access
+
+Custom shared libraries (libraries not available in distribution repositories) SHALL be exposed to the VM via virtio-9p read-only filesystem shares.
+
+The following 9p shares SHALL be defined in the VM's libvirt XML:
+
+| 9p Tag | Host Path | VM Mount Point | Mode |
+|--------|-----------|----------------|------|
+| `hostlib` | `/usr/local/lib` | `/usr/local/lib` | read-only |
+| `hostinclude` | `/usr/local/include` | `/usr/local/include` | read-only |
+
+Mounts SHALL be persisted in `/etc/fstab` on the VM:
+```
+hostlib      /usr/local/lib      9p ro,trans=virtio,nofail 0 0
+hostinclude  /usr/local/include  9p ro,trans=virtio,nofail 0 0
+```
+
+The VM SHALL have `/usr/local/lib` in its `ld.so.conf` and `/usr/local/lib/pkgconfig` in `PKG_CONFIG_PATH`.
+
+Distribution packages SHALL be installed directly on the VM via `pacman`. The VM SHALL have internet access for package installation.
+
+#### 2.10.4 CMake Integration
+
+Projects SHALL add the module path and include `QEMUTest.cmake`:
+```cmake
+list(APPEND CMAKE_MODULE_PATH "$ENV{HOME}/.config/cmake")
+include(QEMUTest)
+```
+
+**Test Registration:**
+```cmake
+qemu_add_test(NAME core_tests COMMAND test_core ARCH x86_64)
+qemu_add_test(NAME core_deploy COMMAND test_core ARCH x86_64 VARIANT deploy)
+qemu_add_cross_test(NAME core COMMAND test_core ARCHS x86_64 aarch64 riscv64)
+qemu_add_test(NAME driver_test COMMAND test_driver ARCH x86_64 DKMS KERNEL_MODULE mydriver)
+qemu_add_run_target()
+```
+
+**Functions:**
+
+| Function | Purpose |
+|----------|---------|
+| `qemu_add_test()` | Register a single test; creates CTest entry and `run-<name>` target |
+| `qemu_add_cross_test()` | Register a test across multiple architectures |
+| `qemu_add_run_target()` | Create `tests-run` target: parallel CTest + lcov + genhtml + test-state save |
+
+**Parameters for `qemu_add_test()`:**
+
+| Parameter | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| `NAME` | Yes | | Test name |
+| `COMMAND` | Yes | | CMake target producing the test binary |
+| `ARCH` | No | `x86_64` | Target architecture |
+| `VARIANT` | No | `dev` | VM variant (`dev`, `deploy`) |
+| `TIMEOUT` | No | `120` | Execution timeout in seconds |
+| `DKMS` | No | Off | Enable kernel module testing |
+| `KERNEL_MODULE` | No | | Path to `.ko` file (requires `DKMS`) |
+
+#### 2.10.5 Execution Targets
+
+| Target | Function |
+|--------|----------|
+| `make run-<name>` | Single test in QEMU (quick iteration) |
+| `make tests-run` | Full CTest suite in QEMU (`-j 12`), lcov capture, genhtml report, test-state save |
+
+#### 2.10.6 Execution Flow
+
+1. CTest invokes `qemu-runner.sh` per test binary (parallel; `-j 12`)
+2. Runner resolves VM IP via `virsh domifaddr`
+3. Runner verifies VM is running; exits with error if not
+4. Runner copies test binary to VM via `scp` (`/tmp/qemu-test-$$/test_binary`)
+5. Runner executes binary on VM via `ssh` with `GCOV_PREFIX` and `GCOV_PREFIX_STRIP` set
+6. Runner extracts `.gcda` files from VM via `tar` over `ssh` back to the host build tree
+7. Runner cleans up remote directory
+8. Runner exits with the test binary's exit code
+
+After all tests complete, the `tests-run` target invokes `lcov --capture` and `genhtml`.
+
+**Coverage Extraction:**
+
+`GCOV_PREFIX` on the VM redirects `.gcda` output; `GCOV_PREFIX_STRIP` removes the host build directory prefix so relative paths match `.gcno` files on the host. The runner transfers `.gcda` files back via `tar` over SSH.
+
+**SSH Configuration:**
+
+The runner SHALL use SSH connection multiplexing (`ControlMaster=auto`, `ControlPersist=30`).
+
+#### 2.10.7 DKMS Kernel Module Testing
+
+For tests with the `DKMS` flag:
+
+1. Runner copies the `.ko` file to the VM
+2. Guest executes `insmod` before running the test binary
+3. After test completion, `dmesg` output is captured
+4. `rmmod` unloads the module
+
+The VM SHALL run the host kernel (`linux-zen`) to ensure module ABI compatibility.
+
+#### 2.10.8 Cross-Compilation
+
+Toolchain files per architecture (`QEMUToolchain-{arch}.cmake`) set the cross-compiler and `-static` linking. Static binaries execute inside the target VM without shared library dependencies.
+
+**Supported Architectures:** i386, x86_64, aarch64, riscv64
+
+#### 2.10.9 Infrastructure Files
+
+All files reside in `~/git/dangstd/cmake/` and are symlinked to `~/.config/cmake/`:
+
+| File | Function |
+|------|----------|
+| `QEMUTest.cmake` | CMake module providing `qemu_add_test()`, `qemu_add_cross_test()`, `qemu_add_run_target()` |
+| `QEMUToolchain-{arch}.cmake` | Cross-compilation toolchain files per architecture |
+| `qemu/qemu-runner.sh` | SSH-based test runner: copies binary, executes, extracts coverage |
+| `qemu/create-vm.sh` | VM provisioning from cloud images via `cloud-init` |
+
+#### 2.10.10 Test Protocol
+
+1. External test frameworks SHALL NOT be used; each project SHALL provide its own header-only harness
+2. Test binaries SHALL exit 0 on success, nonzero on failure
+3. New test module registration:
+   ```cmake
+   add_executable(test_<module> tests/<module>/main.c ${CORE_SOURCES})
+   target_include_directories(test_<module> PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests)
+   target_link_libraries(test_<module> PRIVATE ${COMMON_LIBS})
+   qemu_add_test(NAME <module>_tests COMMAND test_<module> ARCH x86_64)
+   ```
+4. `qemu_add_run_target()` SHALL be called once after all test registrations
+
+#### 2.10.11 Project Requirements
+
+1. `CMakeLists.txt` SHALL include `QEMUTest.cmake` via `$ENV{HOME}/.config/cmake` module path
+2. `qemu_add_test()` SHALL be used exclusively for test registration
+3. `qemu_add_run_target()` SHALL follow all test registrations
+4. Coverage flags (§2.7) and `invalidate-test-state` (§2.7) SHALL be present
+5. Project-specific distribution packages SHALL be installed on the VM prior to first test execution
+6. Custom shared libraries SHALL be installed to `/usr/local/lib` on the host; the VM accesses them via 9p
 
 ---
 
@@ -165,6 +347,7 @@ Prior to implementation:
 1. Functions SHALL NOT be stubbed; full implementations SHALL be provided
 2. When modifying existing logic, changes SHALL be made incrementally
 3. Stubs pollute symbol tables and mislead contributors inspecting function signatures
+4. Indexing SHALL be zero-based at all times. Should an external dependency introduce one-based indexing, translation SHALL be performed at the boundary.
 
 ---
 
@@ -210,6 +393,8 @@ ast-grep run --pattern 'int32_t func_name($$$) { $$$BODY }' --lang c file.c --js
 9. Space SHALL follow keywords (`if`, `while`, `for`, `switch`); space SHALL NOT precede function call parentheses
 10. Variable declarations SHALL be at top of scope block, initialized to 0/NULL
 11. Unused return values SHALL be cast: `(void)memset(...)`
+12. Output SHALL NOT be redirected to alternate streams invisible to the user; `>&2`, `>/dev/null`, and `2>&1` suppression of diagnostic or progress output are prohibited in scripts
+13. Indexing SHALL be zero-based at all times. Should an external dependency introduce one-based indexing, translation SHALL be performed at the boundary.
 
 ### 7.2 File Naming vs Symbol Naming
 
@@ -250,10 +435,11 @@ Rationale: File names appear with directory path providing context; symbols appe
 4. Struct padding SHALL use explicit `uint8_t pudding[N]` fields
 5. Cache-aligned structs SHALL use `__attribute__((aligned(64)))`
 6. `double` SHALL be used exclusively for floating point; `float` is prohibited
+7. Signed integer types SHALL NOT be used; `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`, `size_t` SHALL be used exclusively
 
 ### 7.7 Error Handling
 
-1. Functions SHALL return `int32_t` with `*_ERR_*` codes
+1. Functions SHALL return `uint32_t` with `*_ERR_*` codes
 2. `UNLIKELY()` macro SHALL be used for error paths
 3. Guard clauses SHALL be at function start with early return on error
 4. `goto` and labels SHALL NOT be used; explicit cleanup in each error path SHALL be used instead
@@ -358,7 +544,7 @@ sub=subscription
 ### 8.10 Prohibited Terms
 ```
 buf (use buff)  count (use cunt)  padding (use pudding)
-float (use double)
+float (use double)  int/short/long (use uint*_t)
 ```
 
 ---
@@ -474,3 +660,5 @@ Non-prefixed aliases: `byte_t`, `word_t`, `dword_t`, `qword_t`
 |---------|------|---------|
 | 1.0 | 2026-01-23 | Initial specification |
 | 1.1 | 2026-01-24 | Automated test state tracking; global gitignore for `.test-state` |
+| 1.2 | 2026-01-27 | QEMU/KVM test execution enforcement; symlinked infrastructure to dangstd |
+| 1.3 | 2026-01-27 | §2.10 rewrite: persistent VMs, SSH runner, 9p shared libraries, cloud-init provisioning |

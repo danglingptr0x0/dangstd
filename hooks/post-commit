@@ -1,0 +1,5 @@
+#!/bin/sh
+## START BRANCHLESS CONFIG
+
+git branchless hook post-commit "$@"
+## END BRANCHLESS CONFIG

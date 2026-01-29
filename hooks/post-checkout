@@ -1,25 +1,22 @@
 #!/usr/bin/env zsh
 
+git branchless hook post-checkout "$@" 2>/dev/null
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ ! -f "$REPO_ROOT/CMakeLists.txt" ]] && exit 0
+cd "$REPO_ROOT"
+
 PREV_HEAD="$1"
 NEW_HEAD="$2"
 BRANCH_CHECKOUT="$3"
 
-git branchless hook post-checkout "$@" 2>/dev/null
-
 [[ "$BRANCH_CHECKOUT" != "1" ]] && exit 0
 [[ "$PREV_HEAD" == "$NEW_HEAD" ]] && exit 0
 
-if [[ -f "CMakeLists.txt" ]]; then
-    if [[ ! -f "build/compile_commands.json" ]] || [[ "CMakeLists.txt" -nt "build/compile_commands.json" ]]; then
-        echo "regenerating compile_commands.json..."
-        cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug >/dev/null 2>&1
-        [[ -f "build/compile_commands.json" ]] && ln -sf build/compile_commands.json . 2>/dev/null
-    fi
-elif [[ -f "Makefile" ]] && command -v bear &>/dev/null; then
-    if [[ ! -f "compile_commands.json" ]] || [[ "Makefile" -nt "compile_commands.json" ]]; then
-        echo "regenerating compile_commands.json via bear..."
-        bear -- make -n >/dev/null 2>&1 || true
-    fi
+if [[ ! -f "build/compile_commands.json" ]] || [[ "CMakeLists.txt" -nt "build/compile_commands.json" ]]; then
+    echo "regenerating compile_commands.json..."
+    cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug >/dev/null 2>&1
+    [[ -f "build/compile_commands.json" ]] && ln -sf build/compile_commands.json . 2>/dev/null
 fi
 
 if command -v ccache &>/dev/null; then
@@ -38,3 +35,7 @@ if [[ -n "$STALE_BRANCHES" ]]; then
 fi
 
 exit 0
+## START BRANCHLESS CONFIG
+
+git branchless hook post-checkout "$@"
+## END BRANCHLESS CONFIG

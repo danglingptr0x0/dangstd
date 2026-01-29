@@ -1,0 +1,15 @@
+#!/bin/sh
+## START BRANCHLESS CONFIG
+
+git branchless hook post-merge "$@"
+## END BRANCHLESS CONFIG
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[ ! -f "$REPO_ROOT/CMakeLists.txt" ] && exit 0
+
+echo -n "Generate and commit changelog? [y/N] "
+read response
+[ "$response" != "y" ] && [ "$response" != "Y" ] && exit 0
+
+git-cliff -o CHANGELOG.md 2>/dev/null
+git add CHANGELOG.md 2>/dev/null && git commit --no-verify -m "docs: update changelog" 2>/dev/null || true

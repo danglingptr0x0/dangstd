@@ -1,12 +1,15 @@
 #!/usr/bin/env zsh
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ ! -f "$REPO_ROOT/CMakeLists.txt" ]] && exit 0
+
 COMMIT_MSG_FILE="$1"
 COMMIT_SOURCE="$2"
 
 [[ "$COMMIT_SOURCE" == "merge" || "$COMMIT_SOURCE" == "squash" ]] && exit 0
 [[ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]] && exit 0
 
-CURRENT_MSG=$(cat "$COMMIT_MSG_FILE" 2>/dev/null)
+CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
 [[ "$CURRENT_MSG" =~ "^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)\\(" ]] && exit 0
 
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)

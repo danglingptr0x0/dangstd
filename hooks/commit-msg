@@ -1,5 +1,8 @@
 #!/usr/bin/env zsh
 
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+[[ ! -f "$REPO_ROOT/CMakeLists.txt" ]] && exit 0
+
 COMMIT_MSG_FILE="$1"
 COMMIT_MSG=$(head -n1 "$COMMIT_MSG_FILE")
 GIT_DIR=$(git rev-parse --git-dir)
@@ -15,6 +18,12 @@ if [[ $MSG_LEN -lt 75 || $MSG_LEN -gt 100 ]]; then
     ERRORS+="error: commit message length must be 75-100 characters\n\n"
     ERRORS+="current length: $MSG_LEN\n"
     ERRORS+="message: $COMMIT_MSG\n\n"
+fi
+
+if ! echo "$COMMIT_MSG" | LC_ALL=C grep -qP '^[\x20-\x7E]*$'; then
+    ERRORS+="error: commit message contains non-ASCII or control characters\n\n"
+    ERRORS+="only printable ASCII (0x20-0x7E) allowed\n"
+    ERRORS+="no emoji, smart quotes, em-dashes, tabs, or newlines\n\n"
 fi
 
 if [[ ! "$COMMIT_MSG" =~ "^($TYPES)\(([^)]+)\): .{10,}$" ]]; then
@@ -95,7 +104,7 @@ MSG_DESC="${COMMIT_MSG#*: }"
 MSG_CLEAN=$(echo "$MSG_DESC" | sed -e 's/`[^`]*`/code/g' -e 's/"[^"]*"/quoted/g' -e 's/w:\([a-zA-Z0-9_]*\)/\1/g' -e 's/  */ /g')
 
 if [[ ${#MSG_CLEAN} -ge 10 ]]; then
-    TECHNICAL="init|alloc|fmt|sizeof|dealloc|main|usage|cleanup|gen|eval|transpile|vreg|instr|x86|cmp|def|config|tokenize|cb|str|rm|api|cli|ctx|ptr|buf|idx|len|src|dst|err|ret|func|funcs|impl|refactor|todo|fixme|wip|mutex|sync|async|param|arg|args|null|nullptr|bool|int|uint|enum|struct|typedef|ifdef|endif|pragma|const|static|extern|inline|volatile|malloc|calloc|realloc|free|memset|memcpy|memmove|strcmp|strlen|strdup|sprintf|printf|fprintf|stderr|stdout|stdin|fopen|fclose|fread|fwrite|fseek|ftell|errno|posix|pthread|mutex|cond|semaphore|socket|recv|send|bind|listen|accept|poll|epoll|ioctl|mmap|munmap|brk|sbrk|timeframe|queueing|rho|lambda|lq|psi|ctx|sample|stats|compute|rolling|linreg"
+    TECHNICAL="init|alloc|fmt|sizeof|dealloc|main|usage|cleanup|gen|eval|transpile|vreg|instr|x86|cmp|def|config|tokenize|cb|str|rm|api|cli|ctx|ptr|buf|idx|len|src|dst|err|ret|func|funcs|impl|refactor|todo|fixme|wip|mutex|sync|async|param|arg|args|null|nullptr|bool|int|uint|enum|struct|typedef|ifdef|endif|pragma|const|static|extern|inline|volatile|malloc|calloc|realloc|free|memset|memcpy|memmove|strcmp|strlen|strdup|sprintf|printf|fprintf|stderr|stdout|stdin|fopen|fclose|fread|fwrite|fseek|ftell|errno|posix|pthread|mutex|cond|semaphore|socket|recv|send|bind|listen|accept|poll|epoll|ioctl|mmap|munmap|brk|sbrk|timeframe|queueing|rho|lambda|lq|psi|ctx|sample|stats|compute|rolling|linreg|calc"
     LT_DISABLE="UPPERCASE_SENTENCE_START,COMMA_PARENTHESIS_WHITESPACE,WHITESPACE_RULE,EN_QUOTES,CONSECUTIVE_SPACES"
 
     if command -v vale &>/dev/null; then
@@ -117,7 +126,7 @@ if [[ -n "$ERRORS" ]]; then
     exit 1
 fi
 
-CLEANED_MSG=$(cat "$COMMIT_MSG_FILE" | sed -E 's/w:[a-zA-Z0-9_]+//g' | sed 's/  */ /g' | sed 's/ $//')
+CLEANED_MSG=$(cat "$COMMIT_MSG_FILE" | sed -E 's/w:([a-zA-Z0-9_]+)/\1/g' | sed 's/  */ /g' | sed 's/ $//')
 echo "$CLEANED_MSG" > "$COMMIT_MSG_FILE"
 
 exit 0

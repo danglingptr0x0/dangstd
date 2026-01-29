@@ -1,5 +1,9 @@
 *.bkp.[0-9]*
 .test-state
+.mainproj
+.workproj
+build/
+ext/
 *.o
 *.a
 *.so
