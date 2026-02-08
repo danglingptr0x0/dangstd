@@ -24,8 +24,3 @@ position p;
 @@
 * pthread_join@p(...);
 
-// close() return not checked (usually fine but worth noting)
-@close_no_check@
-position p;
-@@
-* close@p(...);

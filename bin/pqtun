@@ -1,0 +1,157 @@
+#!/bin/bash
+set -e
+
+CONF="${HOME}/.config/pqtun/config"
+if [ -f "${CONF}" ]; then
+    . "${CONF}"
+fi
+
+PQTUN_PORT="${PQTUN_PORT:-2222}"
+PQTUN_LOCAL_PORT="${PQTUN_LOCAL_PORT:-2222}"
+PQTUN_OPENSSL="${PQTUN_OPENSSL:-/usr/bin/openssl}"
+PQTUN_STUNNEL="${PQTUN_STUNNEL:-/usr/bin/stunnel}"
+PQTUN_RUN_DIR="${XDG_RUNTIME_DIR:-/tmp}/pqtun"
+
+usage()
+{
+    echo "usage: pqtun <command> [args]"
+    echo ""
+    echo "commands:"
+    echo "  connect <host> [local_port]  start client tunnel to host"
+    echo "  stop <host>                  stop client tunnel"
+    echo "  status <host>                check tunnel status"
+    echo "  deploy <host>                deploy server certs via SSH"
+    exit 1
+}
+
+tunnel_connect()
+{
+    HOST="$1"
+    LOCAL_PORT="${2:-${PQTUN_LOCAL_PORT}}"
+    REMOTE=$(ssh -G "${HOST}" 2>/dev/null | grep "^hostname " | awk '{print $2}')
+
+    if [ -z "${REMOTE}" ]; then
+        echo "error: cannot resolve hostname for ${HOST}"
+        exit 1
+    fi
+
+    mkdir -p "${PQTUN_RUN_DIR}"
+
+    SCRATCH=$(mktemp -d "${PQTUN_RUN_DIR}/scratch.XXXXXX")
+    chmod 0700 "${SCRATCH}"
+
+    pass show "${PQTUN_PASS_CA_CERT:-pqtun/ca/cert}" > "${SCRATCH}/ca.pem"
+    pass show "pqtun/client/$(hostname)/cert" > "${SCRATCH}/client.pem"
+    pass show "pqtun/client/$(hostname)/key" > "${SCRATCH}/client.key"
+    chmod 0600 "${SCRATCH}/client.key"
+
+    CONF_FILE="${PQTUN_RUN_DIR}/stunnel-client-${HOST}.conf"
+
+    cat > "${CONF_FILE}" << EOF
+pid = ${PQTUN_RUN_DIR}/stunnel-client-${HOST}.pid
+foreground = no
+
+[pqtun-${HOST}]
+client = yes
+accept = 127.0.0.1:${LOCAL_PORT}
+connect = ${REMOTE}:${PQTUN_PORT}
+cert = ${SCRATCH}/client.pem
+key = ${SCRATCH}/client.key
+CAfile = ${SCRATCH}/ca.pem
+verify = 2
+sslVersion = TLSv1.3
+curves = X25519MLKEM768
+ciphersuites = TLS_CHACHA20_POLY1305_SHA256
+EOF
+
+    "${PQTUN_STUNNEL}" "${CONF_FILE}"
+    echo "tunnel: ${HOST} listening on 127.0.0.1:${LOCAL_PORT}"
+    echo "scratch: ${SCRATCH} (contains extracted keys; remove after tunnel stop)"
+}
+
+tunnel_stop()
+{
+    HOST="$1"
+    PID_FILE="${PQTUN_RUN_DIR}/stunnel-client-${HOST}.pid"
+
+    if [ -f "${PID_FILE}" ]; then
+        kill "$(cat "${PID_FILE}")" 2>/dev/null
+        rm -f "${PID_FILE}"
+        echo "tunnel: ${HOST} stopped"
+    else
+        echo "tunnel: ${HOST} not running"
+    fi
+
+    CONF_FILE="${PQTUN_RUN_DIR}/stunnel-client-${HOST}.conf"
+    rm -f "${CONF_FILE}"
+
+    for d in "${PQTUN_RUN_DIR}"/scratch.*; do
+        if [ -d "${d}" ]; then
+            rm -rf "${d}"
+        fi
+    done
+    echo "scratch: cleaned"
+}
+
+tunnel_status()
+{
+    HOST="$1"
+    PID_FILE="${PQTUN_RUN_DIR}/stunnel-client-${HOST}.pid"
+
+    if [ -f "${PID_FILE}" ] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null; then
+        echo "tunnel: ${HOST} running (pid $(cat "${PID_FILE}"))"
+    else
+        echo "tunnel: ${HOST} not running"
+        return 1
+    fi
+}
+
+tunnel_deploy()
+{
+    HOST="$1"
+    REMOTE_HOSTNAME=$(ssh "${HOST}" "hostname" 2>/dev/null)
+
+    if [ -z "${REMOTE_HOSTNAME}" ]; then
+        echo "error: cannot resolve remote hostname for ${HOST}"
+        exit 1
+    fi
+
+    SCRATCH=$(mktemp -d "${PQTUN_RUN_DIR}/deploy.XXXXXX")
+    chmod 0700 "${SCRATCH}"
+
+    pass show "${PQTUN_PASS_CA_CERT:-pqtun/ca/cert}" > "${SCRATCH}/ca.pem"
+    pass show "pqtun/server/${REMOTE_HOSTNAME}/cert" > "${SCRATCH}/server.pem"
+    pass show "pqtun/server/${REMOTE_HOSTNAME}/key" > "${SCRATCH}/server.key"
+
+    echo "deploying to ${HOST} (${REMOTE_HOSTNAME})..."
+    ELEVATE="sudo"
+    if ssh "${HOST}" "command -v doas" >/dev/null 2>&1; then
+        ELEVATE="doas"
+    fi
+
+    ssh -t "${HOST}" "${ELEVATE} mkdir -p /etc/pqtun && ${ELEVATE} chmod 0755 /etc/pqtun"
+    scp "${SCRATCH}/ca.pem" "${HOST}:/tmp/pqtun-ca.pem"
+    scp "${SCRATCH}/server.pem" "${HOST}:/tmp/pqtun-server.pem"
+    scp "${SCRATCH}/server.key" "${HOST}:/tmp/pqtun-server.key"
+    ssh -t "${HOST}" "${ELEVATE} mv /tmp/pqtun-ca.pem /etc/pqtun/ca.pem && ${ELEVATE} mv /tmp/pqtun-server.pem /etc/pqtun/server.pem && ${ELEVATE} mv /tmp/pqtun-server.key /etc/pqtun/server.key && ${ELEVATE} chmod 0644 /etc/pqtun/ca.pem /etc/pqtun/server.pem && ${ELEVATE} chmod 0600 /etc/pqtun/server.key"
+
+    rm -rf "${SCRATCH}"
+
+    echo "deployed: ca.pem, server.pem, server.key to ${HOST}:/etc/pqtun/"
+    echo "next: install stunnel on ${HOST} and start the server tunnel"
+}
+
+if [ $# -lt 2 ] && [ "${1}" != "" ]; then
+    usage
+fi
+
+CMD="$1"
+shift
+
+case "${CMD}" in
+    connect) tunnel_connect "$@" ;;
+    stop) tunnel_stop "$@" ;;
+    status) tunnel_status "$@" ;;
+    deploy) tunnel_deploy "$@" ;;
+    *) usage ;;
+esac

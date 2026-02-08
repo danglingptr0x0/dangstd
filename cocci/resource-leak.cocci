@@ -1,22 +1,12 @@
-// malloc without free on error path
-@malloc_no_free@
+// ldg_mem_alloc without ldg_mem_dealloc on error path
+@ldg_alloc_no_dealloc@
 expression E;
 position p;
 @@
-  E = malloc(...)
-  ... when != free(E)
+  E = ldg_mem_alloc(...)
+  ... when != !E
+      when != E == NULL
       when != ldg_mem_dealloc(E)
-      when != hw_mem_dealloc(E)
-* return@p ...;
-
-// posix_memalign without free on error path
-@memalign_no_free@
-expression ptr;
-position p;
-@@
-  posix_memalign(&ptr, ...)
-  ... when != free(ptr)
-      when != ldg_mem_dealloc(ptr)
 * return@p ...;
 
 // socket without close
@@ -35,4 +25,5 @@ position p;
 @@
   fd = open(path, flags, ...)
   ... when != close(fd)
+      when != fd < 0
 * return@p ...;

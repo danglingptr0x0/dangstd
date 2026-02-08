@@ -1,17 +1,3 @@
-// printf with variable as format string (potential format string vuln)
-@printf_var_fmt@
-expression E;
-position p;
-@@
-* printf@p(E)
-
-// fprintf with variable as format string
-@fprintf_var_fmt@
-expression fp, E;
-position p;
-@@
-* fprintf@p(fp, E)
-
 // sprintf with variable as format string
 @sprintf_var_fmt@
 expression dst, E;

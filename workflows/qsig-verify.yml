@@ -1,0 +1,103 @@
+name: qsig evidence verification
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  verify-chain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: verify evidence chain
+        run: |
+          BASE=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+              BASE="${{ github.event.pull_request.base.sha }}"
+          else
+              BASE="${{ github.event.before }}"
+          fi
+
+          if [ "${BASE}" = "0000000000000000000000000000000000000000" ]; then
+              echo "initial push; skipping"
+              exit 0
+          fi
+
+          COMMITS=$(git rev-list "${BASE}..HEAD")
+          FAILED=0
+
+          for COMMIT in ${COMMITS}; do
+              SHORT=$(git rev-parse --short "${COMMIT}")
+              MSG=$(git log -1 --format=%s "${COMMIT}")
+
+              case "${MSG}" in
+                  qsig:\ *) continue ;;
+              esac
+
+              CHAIN_DIR=".chain/${SHORT}"
+
+              if [ ! -d "${CHAIN_DIR}" ]; then
+                  echo "REJECT: ${SHORT} missing .chain/ evidence directory"
+                  FAILED=1
+                  continue
+              fi
+
+              if [ ! -f "${CHAIN_DIR}/manifest.txt" ]; then
+                  echo "REJECT: ${SHORT} missing manifest.txt"
+                  FAILED=1
+                  continue
+              fi
+
+              MANIFEST_COMMIT=$(grep "^commit:" "${CHAIN_DIR}/manifest.txt" | cut -d' ' -f2)
+              if [ "${MANIFEST_COMMIT}" != "${COMMIT}" ]; then
+                  echo "REJECT: ${SHORT} manifest commit mismatch; expected: ${COMMIT}; got: ${MANIFEST_COMMIT}"
+                  FAILED=1
+                  continue
+              fi
+
+              TSR_FOUND=0
+              for TSR in "${CHAIN_DIR}"/*.tsr; do
+                  if [ -f "${TSR}" ]; then
+                      TSR_FOUND=1
+                      break
+                  fi
+              done
+
+              if [ "${TSR_FOUND}" = "0" ]; then
+                  echo "REJECT: ${SHORT} no RFC 3161 timestamp responses found"
+                  FAILED=1
+                  continue
+              fi
+
+              if [ ! -f "${CHAIN_DIR}/manifest.txt.ots" ]; then
+                  echo "WARN: ${SHORT} missing OTS proof (Bitcoin anchor pending)"
+              fi
+
+              if [ ! -f "${CHAIN_DIR}/eth-anchor.json" ]; then
+                  echo "REJECT: ${SHORT} missing eth-anchor.json"
+                  FAILED=1
+                  continue
+              fi
+
+              if [ ! -f "${CHAIN_DIR}/qsig.asice" ]; then
+                  echo "REJECT: ${SHORT} missing qsig.asice"
+                  FAILED=1
+                  continue
+              fi
+
+              echo "OK: ${SHORT}"
+          done
+
+          if [ "${FAILED}" = "1" ]; then
+              echo ""
+              echo "evidence verification failed; push rejected"
+              exit 1
+          fi
+
+          echo ""
+          echo "all commits verified"

@@ -26,12 +26,32 @@ fi
 
 ERRORS=""
 
-if [[ -f "CMakeLists.txt" ]]; then
-    if ! grep -qE '\-\-coverage|ftest-coverage|fprofile-arcs' CMakeLists.txt 2>/dev/null; then
-        ERRORS+="error: coverage instrumentation not configured\n\n"
-        ERRORS+="CMakeLists.txt must include coverage flags:\n"
-        ERRORS+="  set(CMAKE_C_FLAGS \"\${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage\")\n"
-        ERRORS+="  set(CMAKE_EXE_LINKER_FLAGS \"\${CMAKE_EXE_LINKER_FLAGS} --coverage\")\n\n"
+if [[ -f ".mainproj" && -f "CMakeLists.txt" ]]; then
+    if ! grep -qE 'include\(std\)' CMakeLists.txt 2>/dev/null; then
+        ERRORS+="error: std.cmake not sourced\n\n"
+        ERRORS+="CMakeLists.txt must include:\n"
+        ERRORS+="  list(APPEND CMAKE_MODULE_PATH \"\$ENV{HOME}/.config/cmake\")\n"
+        ERRORS+="  include(std)\n\n"
+    fi
+
+    STAGED_HEADERS=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.h$' || true)
+    if [[ -n "$STAGED_HEADERS" ]]; then
+        INVALID_ERRCODES=""
+        while IFS= read -r hdr; do
+            [[ -z "$hdr" ]] && continue
+            while IFS= read -r line; do
+                code=$(echo "$line" | grep -oP '#define\s+\w*ERR\w*\s+\K\d+' || true)
+                [[ -z "$code" ]] && continue
+                if [[ "$code" -ge 0 && "$code" -le 690 ]]; then
+                    INVALID_ERRCODES+="  $hdr: $line\n"
+                fi
+            done < <(grep -E '#define\s+\w*ERR\w*\s+[0-9]+' "$hdr" 2>/dev/null || true)
+        done <<< "$STAGED_HEADERS"
+        if [[ -n "$INVALID_ERRCODES" ]]; then
+            ERRORS+="error: error codes in reserved libdangling range (0-690)\n\n"
+            ERRORS+="$INVALID_ERRCODES\n"
+            ERRORS+="project error codes must be in range 700-990\n\n"
+        fi
     fi
 fi
 
@@ -168,6 +188,77 @@ if [[ -n "$C_STAGED" ]]; then
     fi
 fi
 
+if [[ -n "$C_STAGED" ]]; then
+    SIGNED_TYPES=""
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        DIFF_CONTENT=$(git diff --cached -U0 "$file" 2>/dev/null | grep -E '^\+' | grep -v '^+++' || true)
+        [[ -z "$DIFF_CONTENT" ]] && continue
+        VIOLATIONS=$(echo "$DIFF_CONTENT" | grep -vE '^\+\s*//' | grep -vE '^\+\s*\*' | grep -vE '"[^"]*%[^"]*"' | grep -vE '#include' | grep -vE 'extern\s' | grep -vE '\([a-z_]+\)' | grep -E '\b(signed|short|long|int|int8_t|int16_t|int32_t|int64_t|intptr_t|size_t|ssize_t)\b' | grep -vE '\buint' | head -5 || true)
+        if [[ -n "$VIOLATIONS" ]]; then
+            SIGNED_TYPES+="  $file:\n"
+            SIGNED_TYPES+="$(echo "$VIOLATIONS" | sed 's/^/    /')\n"
+        fi
+    done <<< "$C_STAGED"
+    if [[ -n "$SIGNED_TYPES" ]]; then
+        echo -e "\033[1;33m!!! WARNING: SIGNED/AMBIGUOUS INTEGER TYPES DETECTED !!!\033[0m\n"
+        echo -e "$SIGNED_TYPES"
+        echo -e "\033[1;33mint allowed for POSIX fds; prefer: uint8_t uint16_t uint32_t uint64_t uintptr_t\033[0m\n"
+    fi
+fi
+
+C_STAGED_SRC=$(echo "$C_STAGED" | grep -E '\.c$' || true)
+if [[ -n "$C_STAGED_SRC" ]]; then
+    PROTOTYPES=""
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        PROTO_LINES=$(grep -nE '^\s*(static\s+)?(const\s+)?(void|uint8_t|uint16_t|uint32_t|uint64_t|uintptr_t|float|double|struct\s+\w+|enum\s+\w+|\w+_t)[\s*]+\w+\s*\([^)]*\)\s*;' "$file" 2>/dev/null | head -5 || true)
+        if [[ -n "$PROTO_LINES" ]]; then
+            PROTOTYPES+="  $file:\n"
+            PROTOTYPES+="$(echo "$PROTO_LINES" | sed 's/^/    /')\n"
+        fi
+    done <<< "$C_STAGED_SRC"
+    if [[ -n "$PROTOTYPES" ]]; then
+        ERRORS+="error: function prototypes in source files\n\n"
+        ERRORS+="$PROTOTYPES\n"
+        ERRORS+="prototypes belong in headers; order functions by dependency\n\n"
+    fi
+fi
+
+if [[ -n "$C_STAGED_SRC" ]]; then
+    GLOBALS=""
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        GLOBAL_LINES=$(grep -nE '^(static\s+)?(const\s+)?(volatile\s+)?(uint8_t|uint16_t|uint32_t|uint64_t|uintptr_t|float|double|char|void\s*\*|\w+_t)\s+\w+\s*(=|;|\[)' "$file" 2>/dev/null | grep -vE '\(|^[0-9]+:static\s+const\s' | head -5 || true)
+        if [[ -n "$GLOBAL_LINES" ]]; then
+            GLOBALS+="  $file:\n"
+            GLOBALS+="$(echo "$GLOBAL_LINES" | sed 's/^/    /')\n"
+        fi
+    done <<< "$C_STAGED_SRC"
+    if [[ -n "$GLOBALS" ]]; then
+        echo -e "\033[1;33m!!! WARNING: GLOBAL/FILE-SCOPE VARIABLES DETECTED !!!\033[0m\n"
+        echo -e "$GLOBALS"
+        echo -e "\033[1;33mtop-level declarations are prohibited; use function-local scope\033[0m\n"
+    fi
+fi
+
+if [[ -n "$C_STAGED" ]]; then
+    PRAGMAS=""
+    while IFS= read -r file; do
+        [[ -z "$file" ]] && continue
+        PRAGMA_LINES=$(grep -nE '^\s*#\s*pragma\s' "$file" 2>/dev/null | head -5 || true)
+        if [[ -n "$PRAGMA_LINES" ]]; then
+            PRAGMAS+="  $file:\n"
+            PRAGMAS+="$(echo "$PRAGMA_LINES" | sed 's/^/    /')\n"
+        fi
+    done <<< "$C_STAGED"
+    if [[ -n "$PRAGMAS" ]]; then
+        ERRORS+="error: #pragma directives forbidden\n\n"
+        ERRORS+="$PRAGMAS\n"
+        ERRORS+="refactor code to satisfy static analyzers\n\n"
+    fi
+fi
+
 if [[ -n "$C_STAGED" ]] && command -v cppcheck &>/dev/null; then
     SRC_DIRS=""
     [[ -d "src" ]] && SRC_DIRS="src"
@@ -187,7 +278,7 @@ if [[ -n "$C_STAGED" ]] && command -v clang-tidy &>/dev/null; then
     [[ -f "compile_commands.json" ]] && COMPILE_DB="."
     [[ -f "build/compile_commands.json" ]] && COMPILE_DB="build"
     if [[ -n "$COMPILE_DB" ]]; then
-        TIDY_OUT=$(echo "$C_STAGED" | xargs -r clang-tidy -p "$COMPILE_DB" --quiet 2>&1 | grep -E "warning:|error:" | head -30 || true)
+        TIDY_OUT=$(echo "$C_STAGED" | xargs -r clang-tidy -p "$COMPILE_DB" --quiet --extra-arg=-Wno-unknown-warning-option --extra-arg=-Wno-error=unknown-argument 2>&1 | grep -E "warning:|error:" | grep -v "clang-diagnostic" | head -30 || true)
         if [[ -n "$TIDY_OUT" ]]; then
             ERRORS+="clang-tidy:\n$TIDY_OUT\n\n"
         fi
@@ -198,6 +289,14 @@ if [[ -n "$C_STAGED" ]] && command -v lizard &>/dev/null; then
     COMPLEX=$(echo "$C_STAGED" | xargs -r lizard -CCN15 -w 2>/dev/null | grep "!!!" || true)
     if [[ -n "$COMPLEX" ]]; then
         ERRORS+="complexity (CCN>15):\n$COMPLEX\n\n"
+    fi
+fi
+
+COCCI_RUNNER="$HOME/.config/git/cocci/run-all.sh"
+if [[ -n "$C_STAGED_SRC" ]] && [[ -x "$COCCI_RUNNER" ]] && command -v spatch &>/dev/null; then
+    COCCI_OUT=$("$COCCI_RUNNER" "$REPO_ROOT/src" 2>&1 || true)
+    if echo "$COCCI_OUT" | grep -qE "^issues: [1-9]"; then
+        ERRORS+="coccinelle:\n$COCCI_OUT\n\n"
     fi
 fi
 

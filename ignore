@@ -4,6 +4,7 @@
 .workproj
 build/
 ext/
+compile_commands.json
 *.o
 *.a
 *.so
@@ -72,3 +73,7 @@ ext/
 *.pkg
 *.deb
 *.rpm
+*.key
+*.pem
+*.crt
+

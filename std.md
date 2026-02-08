@@ -1,225 +1,275 @@
+```
+Ongakken Corporation OU                                                OC Std 2.0
+Kalaranna tn 8/2-30, 10415                                       (Revision of 1.9)
+Tallinn, Harju maakond
+Estonia
+Registry code: 17168301
+```
+
+```
+                                         @@@@@@@@@@@@@@@@@@
+                                  @@@@@@@                  @@@@@@@
+                              @@@@@                              @@@@@
+                           @@@         @@@@@@@@@@@@@@   @@@@@         @@@
+                        @@@      @@@@@@            @@   @@@@@@@@@@@     @@@@
+                      @@@     @@@@@      @@@@@@@   @@   @@@@@      @@@     @@@
+                    @@     @@@@@@@@@@@@@@       @@@@@          @@@   @@@@     @@
+                   @@   @@@@@@@@@@@@@@@@   @@@   @@@@         @@@@@  @@@@@@@   @@@
+                                           @@@@  @@   @@@@@@         @    @@@    @@@
+                    @@@@@@@@@@   @@@@@@@@        @@     @@@@@@    @@@@@@@@@@@@@    @@
+                           @@@   @@@@@@@@@@    @@@   @@@@   @@@@@@@@@@@    @@@@@@   @@@
+                            @@   @@@@@@@@@@@@@@@@@@@@@@        @@  @@        @@@@@    @@
+                            @@                          @@@@@  @@ @@   @@@@   @@@@@    @@
+                             @@                          @@@   @@  @@  @@@    @   @@    @@
+          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@       @@    @       @@@    @@@   @@
+         @                   @          @@@@        @ @@@@@@@@       @@@  @@@@@@@@@@@@@  @@@
+        @@   @@@@  @@@@@@@   @@       @@         @@                  @@@  @@@@      @@@   @@
+       @@   @@@@@   @@@@@@   @@     @@@    @@@@@                     @@@  @@@         @@   @@
+      @@   @@@@@@   @@  @@   @@    @@    @@@                         @@@  @@@  @@@@   @@@   @@
+      @@   @@  @@   @@@@@@   @@@@@@    @@@                           @@@  @@@    @    @@@   @@
+     @@   @@   @@   @@@@       @@@@   @@                         @@@@@@@  @@@@      @@@@@@   @@
+     @@   @@   @@   @@@   @@@   @@   @@                        @           @@@@@  @@@   @@   @@
+     @@   @    @@   @@@   @@@   @   @@                        @@          @  @@@   @@   @@@  @@
+    @@   @@    @@   @@@@       @@  @@@                        @@   @@@@@      @@  @@@@@@@@@   @@
+    @@   @@    @@   @@@@@@   @@@   @@                          @@   @@       @@@  @@@@@@@@@   @@
+    @@   @@   @@@  @@@@@    @@@@  @@@                          @@   @@   @@@@@@@              @@
+    @@   @@ @@        @@      @@  @@                           @@@  @@@@@      @@@@@@@@@@@@@  @@
+    @@   @@@@@  @@@@   @@     @@  @@                            @@  @@@@   @@   @@@@@@@@@@@@  @@
+    @@   @@@@@  @@@@   @@@@@@@@@  @@                            @@  @@@   @@@@                @@
+    @@   @@  @@       @@    @@@@  @@                            @@  @@@@        @@@@@@@@@@@@  @@
+    @@   @@   @@@@@@@@        @@  @@@                          @@@  @@@@@     @@@@      @@@   @@
+    @@   @@       @@@  @@@@@  @@   @@                          @@   @@    @@@@@@@@@@     @@   @@
+    @@   @@        @@   @@@   @@   @@                          @@   @@       @@@@    @@@@@@   @@
+    @@   @@        @@@       @@@@   @@                        @@   @@@@@@@@@@@@        @@@@   @
+     @@   @@  @@@@@@@@@@@  @@@@@@   @@                        @                  @@@@   @@@  @@
+     @@   @@@@       @@@@  @@@@@@@   @@                        @                 @@@@   @@   @@
+     @@   @@@   @@@   @@@  @@@@@@@@   @@@                        @@@@@@@@@@@@@@       @@@@   @
+      @@   @@  @@@@@          @@ @@@   @@@                                    @@@@@@@@@@@   @@
+      @@   @@@        @@@@@@  @@   @@    @@@@                                @@@@@@@@@@@    @
+       @@   @@@@    @@@ @@@@  @@    @@@     @@@@@@              @@@@@@@@@@@@@@@@@@@@@@@@   @@
+        @@   @@@@@@      @@@  @@     @@@@          @@          @                          @@
+        @@@   @@         @@@  @@@@@@@@@@@@@@@      @@@@@@      @@  @@@@@@@@@@@@@@@@@@@@@@@
+         @@    @@        @@@  @@@@     @@@@@@@@@@         @   @@@  @@@@
+          @@    @@       @@@  @@    @    @@@@@@@@  @@@@   @@@@@@    @@@
+           @@@   @@@@@@@@@@@  @@  @@@@@            @@@@   @@@@        @@      @@@@@
+             @@               @@    @@   @@@@@@@@@@@@@@   @@@   @@@@   @   @@      @@
+              @@              @@@@      @@@@@@@@     @@   @@@@   @@    @  @@    @    @
+                 @@@@@@@@@@@@     @@@@@@   @@@@@@@ @@@@   @@@@@      @@   @@  @@@@@  @@
+                           @@     @@@@@@@@@@      @@@      @@@@@@@@@@    @@@@   @    @
+                        @@@@@@@@@@@@@@@@@@    @    @    @    @@        @@@@        @@
+                       @                    @@@@@  @  @@@@@  @@      @@@@    @@@@@@
+                       @@    @@@@@@@@@@@@@@   @    @         @@  @@@@      @@@
+                         @@@      @@@@@@@@@@      @@@      @@@@@@@      @@@
+                           @@@@@       @@@@@@@@@@@@@@@@@@@@@@       @@@@
+                               @@@@@                            @@@@@
+                                    @@@@@@@              @@@@@@@
+                                           @@@@@@@@@@@@@@
+```
+
 # Global Development Standards
 
-**Scope:** These standards apply to all repositories unless explicitly overridden by project-local documentation.
+Software Development -- Build Systems, Code Style, and Tooling
 
----
+## 1. Scope
 
-## 1. Definitions
+1 Requirements for software development across all repositories; project-local standards may override specific provisions.
+2 Covers version control, code style, build systems, and libdangling usage.
+3 Extends and overrides ISO/IEC 9899:1999 (C99) and IEEE Std 1003.1-2017 (POSIX.1-2017) where applicable.
+
+## 2. Conformance
+
+1 In this standard, "shall" is to be interpreted as a requirement on an implementation or on a program; conversely, "shall not" is to be interpreted as a prohibition.
+2 If a "shall" or "shall not" requirement is violated, the behavior is undefined unless otherwise specified.
+3 "Should" indicates a recommended practice; deviation requires justification. "May" indicates optional behavior.
+4 "Undefined behavior" results from use of an invalid program construct. "Unspecified behavior" results from use of a valid construct where two or more possibilities exist. "Implementation-defined behavior" results from use of a valid construct where the choice shall be documented.
+
+## 3. Terms and Definitions
 
 | Term | Definition |
-|------|------------|
-| SHALL | Absolute requirement; non-compliance constitutes a violation |
-| SHALL NOT | Absolute prohibition |
-| SHOULD | Recommended practice; deviation requires justification |
-| SHOULD NOT | Discouraged practice; usage requires justification |
-| MAY | Optional; implementation discretion permitted |
+|------|-----------|
+| Coccinelle | Semantic patch tool for C (`spatch`) |
+| Vale | Prose linting tool for style guides |
+| sd | Text replacement tool; used in place of `sed` |
+| ctags | Source code indexing for symbol navigation |
+| ast-grep | Structural code search matching AST patterns |
+| guard clause | Conditional at function start, returns early on invalid input |
+| Allman braces | Opening brace on its own line, aligned with control statement |
+| snake_case | Lowercase words separated by underscores |
+
+Priority levels (descending severity): **BLUE** (security-critical, maximum) > **ULTRAVIOLET** (high-severity security) > **PRIORITY** (elevated importance) > **unmarked** (default, equal among themselves).
 
 ---
 
-## 2. Version Control
+## 4. libdangling
 
-### 2.1 Global Hooks
+Canonical utility library for all C projects; shall be used for all utilities it provides; redefinition prohibited.
+Install: `pkg-config --cflags --libs dangling` | Source: `~/git/libdangling`
 
-Global hooks SHALL be located at `~/.config/git/hooks/` and enabled via:
-```bash
-git config --global core.hooksPath ~/.config/git/hooks
-```
+### 4.1 Macros (`core/macros.h`, `core/bits.h`)
+
+Branch hints: `LDG_LIKELY()`, `LDG_UNLIKELY()` | Sizes: `LDG_KIB/MIB/GIB` | Time: `LDG_MS_PER_SEC`, `LDG_NS_PER_MS/SEC`, `LDG_SECS_PER_MIN/HOUR` | Bases: `LDG_BASE_DECIMAL/HEX` | Byte/bit: `LDG_BYTE_BITS/MASK/SHIFT_*`, `LDG_NIBBLE_BITS/MASK`, `LDG_WORD_BYTES`, `LDG_IS_POW2()` | String: `LDG_STR_TERM(_SIZE)` | Init: `LDG_STRUCT_ZERO_INIT`, `LDG_ARR_ZERO_INIT` | Alignment: `LDG_AMD64_CACHE_LINE_WIDTH`, `LDG_ALIGNED`, `LDG_ALIGNED_UP/DOWN()`
+
+### 4.2 Error Codes (`core/err.h`)
+
+Reserved range 0-690. Project-specific: 700-990. Generic conditions shall use libdangling codes.
+
+| Range | Category |
+|-------|----------|
+| 0 | `LDG_ERR_AOK` |
+| 1-99 | Generic: `_FUNC_ARG_NULL/_INVALID`, `_ALLOC_NULL`, `_NOT_INIT`, `_FULL`, `_OVERFLOW`, `_EMPTY`, `_BUSY`, `_INVALID`, `_TIMEOUT`, `_NOT_FOUND`, `_EXISTS`, `_DENIED`, `_UNSUPPORTED`, `_CANCELLED`, `_INTERRUPTED`, `_RANGE`, `_BOUNDS`, `_WOULD_BLOCK`, `_AGAIN`, `_CLOSED`, `_EOF` |
+| 100-199 | Memory: `_MEM_BAD`, `_STR_TRUNC`, `_MEMMOVE_ALLOCD`, `_SENTINEL`, `_POOL_FULL/_INVALID`, `_DOUBLE_FREE`, `_ALIGNMENT`, `_CORRUPTION` |
+| 200-299 | I/O: `_IO_NOT_FOUND`, `_READ/_WRITE/_FORMAT/_OPEN/_CLOSE/_SEEK/_FLUSH/_PERMISSION/_IS_DIR/_NOT_DIR` |
+| 300-399 | Time: `_TIME_CORE_MIGRATED`, `_NOT_CALIBRATED` |
+| 400-499 | Network: `_NET_INIT/_PERFORM/_TIMEOUT/_CONN/_DISCONNECTED/_REFUSED/_UNREACHABLE/_DNS/_TLS/_PROTOCOL/_RESET/_SEND/_RECV` |
+| 500-599 | String: `_STR_TRUNC/_OVERLAP/_INVALID/_EMPTY/_FORMAT` |
+| 600-649 | Audio: `LDG_ERR_AUDIO_*` |
+| 650-690 | Protocol: `LDG_ERR_PROTO_EMIRU_*`, `LDG_ERR_PROTO_EMIEMI_*` |
+
+Logging: `LDG_ERRLOG_ERR()`, `LDG_ERRLOG_WARN()`, `LDG_ERRLOG_INFO()`
+
+### 4.3 Types (`core/types.h`)
+
+`ldg_byte_t`, `ldg_word_t`, `ldg_dword_t`, `ldg_qword_t` (aliases: `byte_t`, `word_t`, `dword_t`, `qword_t`)
+
+### 4.4 Memory (`mem/`)
+
+`mem.h`: `ldg_mem_init/shutdown/alloc/realloc/dealloc()`, `ldg_mem_stats_get/leaks_dump/valid_is/size_get()`
+`alloc.h`: `ldg_mem_pool_create/destroy/alloc/dealloc()`
+`secure.h`: `ldg_mem_secure_zero/copy/cmp/cmov/neq()`
+
+### 4.5 String (`str/str.h`)
+
+`ldg_strrbrcpy()`, `ldg_str_to_dec()`, `ldg_hex_str_is()`, `ldg_hex_to_bytes/dword()`, `ldg_byte_to_hex()`, `ldg_dword_to_hex()`, `ldg_char_*_is()` predicates
+
+### 4.6 Time (`time/`)
+
+`time.h`: `ldg_time_init/tick/get/monotonic_get/epoch_ms_get/epoch_ns_get/dt_get/dt_smoothed_get/fps_get/frame_cunt_get()`
+`perf.h`: High-resolution performance timing
+
+### 4.7 Threading (`thread/`)
+
+`sync.h`: `ldg_mut_t` (`init/lock/unlock/trylock/destroy`); `ldg_cond_t` (`init/wait/timedwait/signal/broadcast/destroy`); `ldg_sem_t` (`init/open/wait/trywait/post/destroy`)
+`spsc.h`: `ldg_spsc_queue_t`, `ldg_spsc_init/push/pop/peek/cunt/empty/full/shutdown()`
+`pool.h`: `ldg_thread_pool_t`, `ldg_thread_pool_init/start/stop/shutdown/worker_cunt_get()`
+
+### 4.8 Math (`math/linalg.h`)
+
+`ldg_vec3_*()`, `ldg_mat3_*()` (add, sub, scale, dot, cross, mul, inv, det, trace, transpose)
+
+### 4.9 Network (`net/curl.h`)
+
+`ldg_curl_multi_ctx_t`, `ldg_curl_multi_ctx_create/req_add/perform/progress_get/ctx_destroy()`, `ldg_curl_resp_t`
+
+### 4.10 Parsing (`parse/parse.h`)
+
+`ldg_tok_t`, `ldg_tok_arr_t`, `ldg_parse_tokenize()`, `ldg_parse_streq()`
+
+### 4.11 x86-64 (`arch/x86_64/`)
+
+`fence.h`: `LDG_MFENCE/SFENCE/LFENCE/BARRIER/PAUSE`, `LDG_SMP_MB/WMB/RMB/SIG_FENCE()`
+`atomic.h`: `LDG_READ_ONCE/WRITE_ONCE()`, `_AGGREGATE()` variants, `LDG_LOAD_ACQUIRE/STORE_RELEASE()`, `LDG_FETCH_ADD/SUB()`, `LDG_ADD_FETCH/SUB_FETCH()`, `LDG_CAS/CAS_WEAK()`
+`prefetch.h`: `LDG_PREFETCH_R/W/NTA()`
+`tsc.h`: `ldg_tsc_ctx_t`, `ldg_rdtsc/rdtscp()`, `ldg_tsc_calibrate/sample/serialized_sample/serialize/delta/to_sec()`
+`cpuid.h`: `ldg_cpuid()`, `ldg_cpuid_features_t`, `ldg_cpuid_features_get/vendor_get/brand_get()`, `ldg_cpu_core_id_get/relax()`
+`syscall.h`: `ldg_syscall0()` through `ldg_syscall4()`, `LDG_SYS_*` constants
+
+### 4.12 Protocol (`proto/`)
+
+`emiru.h`: `ldg_emiru_hdr_t`, `ldg_emiru_decoded_t`, `ldg_emiru_hdr_validate()`, `ldg_emiru_decode()`, `ldg_emiru_encode()`, `ldg_emiru_encoded_size_get()`
+`emiemi.h`: `ldg_emiemi_io_ctx_t`, `ldg_emiemi_hdr_recv()`, `ldg_emiemi_payload_recv()`, `ldg_emiemi_recv()`, `ldg_emiemi_send()`, `ldg_emiemi_encode()`, `ldg_emiemi_decode()`, `ldg_emiemi_fnv1a()`, `ldg_emiemi_encoded_size_get()`
+
+---
+
+## 5. Version Control
+
+### 5.1 Global Hooks
+
+Location: `~/.config/git/hooks/` via `git config --global core.hooksPath`.
 
 | Hook | Function |
 |------|----------|
 | `pre-commit` | Branch validation, binary blocking, formatting, static analysis |
-| `prepare-commit-msg` | Auto-population of `type(scope):` from branch name |
+| `prepare-commit-msg` | Auto-populate `type(scope):` from branch name |
 | `commit-msg` | Conventional commit validation, scope matching |
 | `pre-push` | Label warnings, WIP blocking, secrets scan, sanitizer tests |
-| `pre-rebase` | Warning on pushed branches, blocking of main/staging |
-| `post-checkout` | Regeneration of compile_commands.json, ccache statistics, stale branch warnings |
+| `pre-rebase` | Warning on pushed branches, blocking main/staging |
+| `post-commit` | Qualified signature generation via `qsig` (§13) |
+| `post-checkout` | compile_commands.json regeneration, ccache stats, stale branch warnings |
 
-### 2.2 Scripts
+### 5.2 Scripts
 
-Scripts SHALL be located at `~/.config/git/bin/` and added to PATH.
+Location: `~/.config/git/bin/` (on PATH). `git bump` = next semver; `git bump --apply` = git flow release; `git release-notes` = changelog via git-cliff.
 
-| Command | Function |
-|---------|----------|
-| `git bump` | Display next semantic version from conventional commits |
-| `git bump --apply` | Initiate git flow release with calculated version |
-| `git release-notes` | Generate changelog via git-cliff |
+### 5.3 Coccinelle
 
-### 2.3 Coccinelle
+Location: `~/.config/git/cocci/`. Run: `run-all.sh /path/to/src` (report) or `run-all.sh /path/to/src --fix` (apply).
 
-Semantic patches SHALL be located at `~/.config/git/cocci/`.
+### 5.4 Branch Naming
 
-```bash
-~/.config/git/cocci/run-all.sh /path/to/src        # Report mode
-~/.config/git/cocci/run-all.sh /path/to/src --fix  # Apply mode (creates backup)
-```
+Pattern: `type/name`. Types: `feat/ fix/ hot/ rel/ misc/ docs/ refactor/ test/ chore/ perf/ ci/ build/ revert/`. Non-conforming names result in undefined behavior.
 
-### 2.4 Branch Naming
+### 5.5 Commit Messages
 
-Branch names SHALL conform to the pattern:
-```
-type/name
-```
+Pattern: `type(scope): description`. Length shall be 75-100 characters. Imperative mood; the description shall not end with a period. Only the description shall be provided; `type(scope):` is auto-populated by hook.
 
-Valid type prefixes: `feat/` `fix/` `hot/` `rel/` `misc/` `docs/` `refactor/` `test/` `chore/` `perf/` `ci/` `build/` `revert/`
+### 5.6 Commit Atomicity
 
-### 2.5 Commit Message Format
+One subsystem per commit (directory path + base filename). Scope shall match subsystem. `.h`/`.c` with same base name shall be committed together. `CMakeLists.txt` constitutes its own subsystem.
 
-Commit messages SHALL conform to the pattern:
-```
-type(scope): description
-```
+### 5.7 Test State Tracking
 
-- Total length SHALL be 75-100 characters
-- Types: feat fix hot rel misc docs refactor test chore perf ci build revert
-- Description SHALL use imperative mood
-- Description SHALL NOT end with a period
-- When committing, only the description SHALL be provided; `type(scope):` is auto-populated by `prepare-commit-msg` hook from branch name
+A minimum of 50% coverage shall be achieved before committing. Commands: `git test-state save/check`. Targets: `make tests` (build only), `make tests-run` (build + QEMU run + coverage + test-state save).
 
-### 2.6 Commit Atomicity
+Pre-commit hook: checks `.test-state` hash -> runs `make tests-run` if invalid -> verifies 50% coverage -> saves state -> blocks on failure.
 
-1. Each commit SHALL contain files from exactly one subsystem
-2. Subsystem SHALL be defined as directory path + base filename
-3. Scope in commit message SHALL match the subsystem
-4. Header and source files with the same base name SHALL be committed together
-5. CMakeLists.txt SHALL be treated as its own subsystem
+`std_invalidate_test_state(main_target)` handles recompilation invalidation. Coverage via `std.cmake` with `STD_DEBUG=ON`. `.test-state` globally gitignored. Reports in `build/coverage_html/`.
 
-### 2.7 Test State Tracking
+### 5.8 Git Invocation
 
-All code SHALL be tested with minimum 50% coverage before committing.
+`git -C <path>` shall not be used; run from repo root.
 
-| Command | Function |
-|---------|----------|
-| `git test-state save` | Record source hash + coverage after tests pass |
-| `git test-state check` | Verify current code matches last tested state |
+### 5.9 Git Flow
 
-| Target | Function |
-|--------|----------|
-| `make tests` | Build all test executables (no run) |
-| `make tests-run` | Build tests, run ctest via QEMU (§2.10), generate coverage, save test state |
+`git flow feature start/finish name` (feat/name, merges to staging). `git flow release start/finish 1.2.0` (rel/1.2.0, merges and tags).
 
-**Automated Workflow:**
-```bash
-cmake -B build && cmake --build build
-git add -A && git commit
-```
+### 5.10 QEMU Test Execution
 
-The pre-commit hook automatically:
-1. Checks if `.test-state` hash matches current source
-2. If invalid, runs `make tests-run` to execute tests and generate coverage
-3. Verifies staged `.c` files have minimum 50% coverage
-4. Saves test state via `git test-state save` on success
-5. Blocks commit if tests fail or coverage is insufficient
+All tests shall run inside persistent QEMU/KVM VMs (libvirt). Host-native execution shall not be used. Rationale: DKMS modules may panic host; single infrastructure for all tests.
 
-**Build Invalidation:**
+#### 5.10.1 VM Architecture
 
-CMakeLists.txt SHALL include a target to invalidate test state on recompilation:
-```cmake
-add_custom_target(invalidate-test-state
-    COMMAND ${CMAKE_COMMAND} -E remove -f ${CMAKE_SOURCE_DIR}/.test-state
-    COMMENT "Invalidating test state"
-)
-add_dependencies(main_target invalidate-test-state)
-```
-
-**Coverage Configuration:**
-
-CMakeLists.txt SHALL include coverage instrumentation:
-```cmake
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage -fprofile-arcs -ftest-coverage")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
-```
-
-**Test State File:**
-- State stored in `.test-state` (globally ignored via `~/.config/git/ignore`)
-- Coverage report generated in `build/coverage_html/`
-- Pre-commit hook blocks commits if CMakeLists.txt lacks coverage flags
-
-### 2.8 Git Invocation
-
-`git -C <path>` SHALL NOT be used. All git commands SHALL be run from the repository base directory.
-
-### 2.9 Git Flow
-
-```bash
-git flow feature start name   # Creates feat/name
-git flow feature finish name  # Merges to staging
-git flow release start 1.2.0  # Creates rel/1.2.0
-git flow release finish 1.2.0 # Merges and tags
-```
-
-### 2.10 QEMU Test Execution
-
-Host-native test binary execution SHALL NOT be used. All test execution SHALL be performed inside persistent QEMU/KVM virtual machines managed by libvirt.
-
-#### 2.10.1 Rationale
-
-DKMS kernel modules SHALL NOT be tested on the host; a kernel module fault may panic the host. Userspace tests SHALL use the same execution path to maintain a single test infrastructure.
-
-#### 2.10.2 VM Architecture
-
-VMs SHALL be persistent, managed by `virsh`/`virt-install` via `qemu:///system`. VMs SHALL run continuously; the test runner connects via SSH per invocation.
-
-**VM Provisioning:**
-
-VMs SHALL be provisioned from cloud images via `cloud-init`. The creation script resides at `~/git/dangstd/cmake/qemu/create-vm.sh`:
-```bash
-create-vm.sh dev       # Arch Linux (development)
-create-vm.sh deploy    # Debian 12 (deployment compatibility)
-```
-
-**VM Naming Convention:** `qemu-test-{variant}-{arch}`
-
-**VM Variants:**
+Persistent VMs via `virsh`/`virt-install` (`qemu:///system`), provisioned from cloud images via `cloud-init`. Script: `~/git/dangstd/cmake/qemu/create-vm.sh dev|deploy`. Naming: `qemu-test-{variant}-{arch}`.
 
 | Variant | Base | Purpose |
 |---------|------|---------|
-| `dev` | Arch Linux (cloud image) | Matches host kernel, glibc, and toolchain; zero environment delta |
-| `deploy` | Debian 12 bookworm (cloud image) | Deployment compatibility against older glibc (2.36); static binaries only |
+| `dev` | Arch Linux | Matches host kernel/glibc/toolchain; zero delta |
+| `deploy` | Debian 12 | Older glibc (2.36) compatibility; static binaries only |
 
-The `dev` variant SHALL run the same kernel as the host (`linux-zen`). The kernel package SHALL be version-locked via `IgnorePkg` in `/etc/pacman.conf` on both host and VM.
+`dev` runs host kernel (`linux-zen`), version-locked via `IgnorePkg` on both host and VM.
 
-**VM Configuration:**
+VM config: 12 vCPUs, 4096 MiB RAM, 20 GiB qcow2, libvirt NAT, SSH via RSA 8192 key (`~/.ssh/id_qemu_test`), sshd MaxStartups 50:30:100, MaxSessions 50.
 
-| Parameter | Value |
-|-----------|-------|
-| vCPUs | 12 |
-| RAM | 4096 MiB |
-| Disk | 20 GiB (qcow2) |
-| Network | libvirt default (NAT) |
-| SSH | Passphrase-less RSA 8192 key at `~/.ssh/id_qemu_test` |
-| sshd MaxStartups | 50:30:100 |
-| sshd MaxSessions | 50 |
+#### 5.10.2 Shared Libraries
 
-#### 2.10.3 Shared Library Access
+Custom libs exposed via virtio-9p read-only shares:
 
-Custom shared libraries (libraries not available in distribution repositories) SHALL be exposed to the VM via virtio-9p read-only filesystem shares.
+| 9p Tag | Host -> VM Mount | Mode |
+|--------|-----------------|------|
+| `hostlib` | `/usr/local/lib` -> `/usr/local/lib` | ro |
+| `hostinclude` | `/usr/local/include` -> `/usr/local/include` | ro |
 
-The following 9p shares SHALL be defined in the VM's libvirt XML:
+Persisted in VM `/etc/fstab`. VM has `/usr/local/lib` in `ld.so.conf`, `/usr/local/lib/pkgconfig` in `PKG_CONFIG_PATH`. Distribution packages installed directly on VM.
 
-| 9p Tag | Host Path | VM Mount Point | Mode |
-|--------|-----------|----------------|------|
-| `hostlib` | `/usr/local/lib` | `/usr/local/lib` | read-only |
-| `hostinclude` | `/usr/local/include` | `/usr/local/include` | read-only |
+#### 5.10.3 CMake Integration
 
-Mounts SHALL be persisted in `/etc/fstab` on the VM:
-```
-hostlib      /usr/local/lib      9p ro,trans=virtio,nofail 0 0
-hostinclude  /usr/local/include  9p ro,trans=virtio,nofail 0 0
-```
-
-The VM SHALL have `/usr/local/lib` in its `ld.so.conf` and `/usr/local/lib/pkgconfig` in `PKG_CONFIG_PATH`.
-
-Distribution packages SHALL be installed directly on the VM via `pacman`. The VM SHALL have internet access for package installation.
-
-#### 2.10.4 CMake Integration
-
-Projects SHALL add the module path and include `QEMUTest.cmake`:
 ```cmake
 list(APPEND CMAKE_MODULE_PATH "$ENV{HOME}/.config/cmake")
-include(QEMUTest)
+include(std)
 ```
 
-**Test Registration:**
+`std.cmake` enforces: C99 (`CMAKE_C_STANDARD 99`, `CMAKE_C_EXTENSIONS OFF`), POSIX.1-2008, `-pedantic -Werror=pedantic`, debug via `-DSTD_DEBUG=ON` (`-g -O0` + coverage). External deps use `SYSTEM` includes.
+
+Test registration:
 ```cmake
 qemu_add_test(NAME core_tests COMMAND test_core ARCH x86_64)
 qemu_add_test(NAME core_deploy COMMAND test_core ARCH x86_64 VARIANT deploy)
@@ -228,437 +278,390 @@ qemu_add_test(NAME driver_test COMMAND test_driver ARCH x86_64 DKMS KERNEL_MODUL
 qemu_add_run_target()
 ```
 
-**Functions:**
+`qemu_add_test()` parameters: NAME (required), COMMAND (required), ARCH (x86_64), VARIANT (dev), TIMEOUT (120), DKMS (off), KERNEL_MODULE.
 
-| Function | Purpose |
-|----------|---------|
-| `qemu_add_test()` | Register a single test; creates CTest entry and `run-<name>` target |
-| `qemu_add_cross_test()` | Register a test across multiple architectures |
-| `qemu_add_run_target()` | Create `tests-run` target: parallel CTest + lcov + genhtml + test-state save |
+Targets: `make run-<name>` (single test), `make tests-run` (full suite `-j 12` + lcov + genhtml + test-state save).
 
-**Parameters for `qemu_add_test()`:**
+#### 5.10.4 Execution Flow
 
-| Parameter | Required | Default | Description |
-|-----------|----------|---------|-------------|
-| `NAME` | Yes | | Test name |
-| `COMMAND` | Yes | | CMake target producing the test binary |
-| `ARCH` | No | `x86_64` | Target architecture |
-| `VARIANT` | No | `dev` | VM variant (`dev`, `deploy`) |
-| `TIMEOUT` | No | `120` | Execution timeout in seconds |
-| `DKMS` | No | Off | Enable kernel module testing |
-| `KERNEL_MODULE` | No | | Path to `.ko` file (requires `DKMS`) |
+1. CTest -> `qemu-runner.sh` per binary (`-j 12`)
+2. Resolve VM IP (`virsh domifaddr`), verify running
+3. `scp` binary to VM (`/tmp/qemu-test-$$/test_binary`)
+4. `ssh` execute with `GCOV_PREFIX`/`GCOV_PREFIX_STRIP`
+5. Extract `.gcda` via `tar` over SSH, clean up, exit with test exit code
+6. After all: `lcov --capture` + `genhtml`
 
-#### 2.10.5 Execution Targets
+SSH uses connection multiplexing (`ControlMaster=auto`, `ControlPersist=30`).
 
-| Target | Function |
-|--------|----------|
-| `make run-<name>` | Single test in QEMU (quick iteration) |
-| `make tests-run` | Full CTest suite in QEMU (`-j 12`), lcov capture, genhtml report, test-state save |
+#### 5.10.5 DKMS Testing
 
-#### 2.10.6 Execution Flow
+DKMS flag: copy `.ko` -> `insmod` -> run test -> capture `dmesg` -> `rmmod`. VM runs host kernel for ABI compat.
 
-1. CTest invokes `qemu-runner.sh` per test binary (parallel; `-j 12`)
-2. Runner resolves VM IP via `virsh domifaddr`
-3. Runner verifies VM is running; exits with error if not
-4. Runner copies test binary to VM via `scp` (`/tmp/qemu-test-$$/test_binary`)
-5. Runner executes binary on VM via `ssh` with `GCOV_PREFIX` and `GCOV_PREFIX_STRIP` set
-6. Runner extracts `.gcda` files from VM via `tar` over `ssh` back to the host build tree
-7. Runner cleans up remote directory
-8. Runner exits with the test binary's exit code
+#### 5.10.6 Cross-Compilation
 
-After all tests complete, the `tests-run` target invokes `lcov --capture` and `genhtml`.
+Toolchain files `QEMUToolchain-{arch}.cmake` set cross-compiler + `-static`. Architectures: i386, x86_64, aarch64, riscv64.
 
-**Coverage Extraction:**
+#### 5.10.7 Infrastructure
 
-`GCOV_PREFIX` on the VM redirects `.gcda` output; `GCOV_PREFIX_STRIP` removes the host build directory prefix so relative paths match `.gcno` files on the host. The runner transfers `.gcda` files back via `tar` over SSH.
+All in `~/git/dangstd/cmake/`, symlinked to `~/.config/cmake/`: `std.cmake`, `QEMUTest.cmake`, `QEMUToolchain-{arch}.cmake`, `qemu/qemu-runner.sh`, `qemu/create-vm.sh`.
 
-**SSH Configuration:**
+#### 5.10.8 Test Protocol
 
-The runner SHALL use SSH connection multiplexing (`ControlMaster=auto`, `ControlPersist=30`).
+1. External frameworks shall not be used; a project-local header-only harness shall be used
+2. Exit 0 indicates pass; nonzero indicates fail
+3. Registration: `add_executable(test_<mod> ...)` + `qemu_add_test(NAME <mod>_tests COMMAND test_<mod> ARCH x86_64)`
+4. `qemu_add_run_target()` shall be called once after all registrations
 
-#### 2.10.7 DKMS Kernel Module Testing
+#### 5.10.9 Project Requirements
 
-For tests with the `DKMS` flag:
-
-1. Runner copies the `.ko` file to the VM
-2. Guest executes `insmod` before running the test binary
-3. After test completion, `dmesg` output is captured
-4. `rmmod` unloads the module
-
-The VM SHALL run the host kernel (`linux-zen`) to ensure module ABI compatibility.
-
-#### 2.10.8 Cross-Compilation
-
-Toolchain files per architecture (`QEMUToolchain-{arch}.cmake`) set the cross-compiler and `-static` linking. Static binaries execute inside the target VM without shared library dependencies.
-
-**Supported Architectures:** i386, x86_64, aarch64, riscv64
-
-#### 2.10.9 Infrastructure Files
-
-All files reside in `~/git/dangstd/cmake/` and are symlinked to `~/.config/cmake/`:
-
-| File | Function |
-|------|----------|
-| `QEMUTest.cmake` | CMake module providing `qemu_add_test()`, `qemu_add_cross_test()`, `qemu_add_run_target()` |
-| `QEMUToolchain-{arch}.cmake` | Cross-compilation toolchain files per architecture |
-| `qemu/qemu-runner.sh` | SSH-based test runner: copies binary, executes, extracts coverage |
-| `qemu/create-vm.sh` | VM provisioning from cloud images via `cloud-init` |
-
-#### 2.10.10 Test Protocol
-
-1. External test frameworks SHALL NOT be used; each project SHALL provide its own header-only harness
-2. Test binaries SHALL exit 0 on success, nonzero on failure
-3. New test module registration:
-   ```cmake
-   add_executable(test_<module> tests/<module>/main.c ${CORE_SOURCES})
-   target_include_directories(test_<module> PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/tests)
-   target_link_libraries(test_<module> PRIVATE ${COMMON_LIBS})
-   qemu_add_test(NAME <module>_tests COMMAND test_<module> ARCH x86_64)
-   ```
-4. `qemu_add_run_target()` SHALL be called once after all test registrations
-
-#### 2.10.11 Project Requirements
-
-1. `CMakeLists.txt` SHALL include `QEMUTest.cmake` via `$ENV{HOME}/.config/cmake` module path
-2. `qemu_add_test()` SHALL be used exclusively for test registration
-3. `qemu_add_run_target()` SHALL follow all test registrations
-4. Coverage flags (§2.7) and `invalidate-test-state` (§2.7) SHALL be present
-5. Project-specific distribution packages SHALL be installed on the VM prior to first test execution
-6. Custom shared libraries SHALL be installed to `/usr/local/lib` on the host; the VM accesses them via 9p
+`CMakeLists.txt` shall include `std.cmake`. `qemu_add_test()` shall be used exclusively. `qemu_add_run_target()` shall follow all test registrations. `std_invalidate_test_state(main_target)` shall be called for the primary target. External dependencies shall use `SYSTEM` includes. Project packages shall be installed on the VM. Custom libraries reside at `/usr/local/lib` on host, accessed via 9p.
 
 ---
 
-## 3. Project Planning
+## 6. Project Planning
 
-Prior to implementation:
+Prior to implementation, all decision points shall be identified; architecture, API design, data flow, and trade-offs shall be clarified. Implementation shall not proceed until confirmed.
 
-1. All significant decision points SHALL be identified
-2. Clarification SHALL be obtained on:
-   - Architecture and module structure
-   - API design and function signatures
-   - Data flow and state management
-   - Trade-offs between approaches
-3. Implementation SHALL NOT proceed until decisions are confirmed
+## 7. Implementation Rules
+
+1. Stubs shall not be used; only full implementations are permitted (stubs pollute symbol tables)
+2. Existing logic shall be modified incrementally
+3. Zero-based indexing shall be used; translation shall occur at boundary if external dependencies use one-based
 
 ---
 
-## 4. Implementation Rules
+## 8. Code Exploration
 
-1. Functions SHALL NOT be stubbed; full implementations SHALL be provided
-2. When modifying existing logic, changes SHALL be made incrementally
-3. Stubs pollute symbol tables and mislead contributors inspecting function signatures
-4. Indexing SHALL be zero-based at all times. Should an external dependency introduce one-based indexing, translation SHALL be performed at the boundary.
-
----
-
-## 5. Code Exploration
-
-Before reading any C source file, AST tools SHALL be used first:
-
+AST tools shall be used before reading C source:
 ```bash
-ctags -x --c-kinds=f src/path/file.c              # Functions
-ctags -x --c-kinds=st src/path/file.c             # Structs/typedefs
-ctags -x --c-kinds=+defgstuvx src/path/file.c     # All symbols
-
+ctags -x --c-kinds=f file.c                    # functions
+ctags -x --c-kinds=st file.c                   # structs/typedefs
+ctags -x --c-kinds=+defgstuvx file.c           # all symbols
 ast-grep run --pattern 'static $RET $FUNC($$$)' --lang c file.c
 ast-grep run --pattern 'typedef struct $NAME { $$$BODY }' --lang c file.c
-
-# JSON output for bulk operations
-ast-grep run --pattern 'int32_t func_name($$$) { $$$BODY }' --lang c file.c --json | jq '.[0].range'
 ```
+
+## 9. Text Replacement
+
+`sd` shall be used for all text replacement; `sed` shall not be used. A dry-run shall precede application: `sd -p 'pat' 'repl' file`. `-F` for literals. Patterns shall be specific.
 
 ---
 
-## 6. Text Replacement
+## 10. Code Style
 
-1. `sd` SHALL be used for text replacement; `sed` is prohibited
-2. Dry-run validation SHALL precede application: `sd -p 'pattern' 'replacement' file`
-3. `-F` flag SHALL be used for literal strings
-4. Patterns SHALL be specific to avoid false positives
+### 10.1 Formatting
 
----
+1. Emojis and decorative symbols shall not be used
+2. Line wrapping shall not be used; horizontal scrolling is acceptable
+3. Visual alignment shall not be used; one space shall separate type and symbol
+4. Indentation shall use 4 spaces; tabs shall not be used
+5. Function definitions shall use Allman braces
+6. Guard clauses shall be single-line: `if (UNLIKELY(!ptr)) { return ERR_FUNC_ARG_NULL; }`
+7. Only single statements shall be inlined; nested single-statement is acceptable: `while (x) { if (y) { return z; } }`
+8. A space shall follow keywords; no space shall precede function call parentheses
+9. Declarations shall appear at top of scope, initialized to 0/NULL
+10. Return values shall be evaluated; `(void)` cast shall not be used
+11. Output redirection (`>&2`, `>/dev/null`, `2>&1`) shall not be used in scripts
+12. Zero-based indexing shall be used; translation shall occur at external boundaries
 
-## 7. Code Style
+### 10.2 Naming
 
-### 7.1 Formatting
+**Files:** Module prefix shall not repeat in directory: `src/hwid/clock.c` not `hwid_clock.c`. Exception: top-level module file shall use the module name: `hwid.h`.
+**Symbols:** Symbols shall include module prefix: `hwid_clock_collect()`.
+**Functions:** snake_case shall be used. Pattern: `module_noun_verb`. Getters: `_get`. Setters: `_set`. Predicates: `_is`/`_has`. Callbacks: `_cb`.
+**Types:** `typedef enum/struct prefix_name { ... } prefix_name_t;` Enum values shall be ALL_CAPS.
+**Constants/Macros:** ALL_CAPS_SNAKE_CASE with module prefix. Magic numbers shall be given descriptive names.
 
-1. Emojis and decorative symbols SHALL NOT be used
-2. Lines SHALL NOT be wrapped; horizontal scrolling is acceptable
-3. Visual alignment via extra whitespace SHALL NOT be used; one space between type and symbol
-4. Indentation SHALL be 4 spaces; tabs SHALL NOT be used
-5. Function definitions SHALL use Allman braces (opening brace on new line)
-6. Single-line guard clauses SHALL be formatted as: `if (UNLIKELY(!ptr)) { return ERR_FUNC_ARG_NULL; }`
-7. Only single statements MAY be inlined
-8. Nested single-statement structures SHALL remain on one line: `while (x) { if (y) { return z; } }`
-9. Space SHALL follow keywords (`if`, `while`, `for`, `switch`); space SHALL NOT precede function call parentheses
-10. Variable declarations SHALL be at top of scope block, initialized to 0/NULL
-11. Unused return values SHALL be cast: `(void)memset(...)`
-12. Output SHALL NOT be redirected to alternate streams invisible to the user; `>&2`, `>/dev/null`, and `2>&1` suppression of diagnostic or progress output are prohibited in scripts
-13. Indexing SHALL be zero-based at all times. Should an external dependency introduce one-based indexing, translation SHALL be performed at the boundary.
+### 10.3 Variables
 
-### 7.2 File Naming vs Symbol Naming
+1. Global and file-scope static variables shall not be used; forward declarations shall not be used
+2. Backend abstraction: generic struct shall use `void *ctx_name`; backends cast to own type
+3. Struct padding shall use `uint8_t pudding[N]`; cache-aligned: `__attribute__((aligned(64)))`
+4. Only unsigned types shall be used: `uint8/16/32/64_t`, `uintptr_t`; signed casts shall occur only at external API boundaries
+5. Sentinel values shall be `UINT*_MAX`; index initialization shall be `UINT*_MAX`; null shall be `0x0`
 
-1. File names within a module directory SHALL NOT repeat the module prefix: `src/hwid/clock.c` (not `src/hwid/hwid_clock.c`)
-2. Exception: top-level module file SHALL use module name: `src/hwid/hwid.c`, `src/hwid/hwid.h`
-3. Symbol names (functions, types, macros) SHALL include the module prefix: `hwid_clock_collect()`, not `clock_collect()`
+### 10.4 Error Handling
 
-Rationale: File names appear with directory path providing context; symbols appear in grep results and debuggers without path context.
+Functions shall return `uint32_t` with `*_ERR_*` codes. `UNLIKELY()` shall wrap error paths. Guard clauses shall appear at function start with early return. `goto` and labels shall not be used; explicit cleanup per path is required. Warning-suppression pragmas shall not be used.
 
-### 7.3 Function Names
+### 10.5 Comments
 
-1. Function names SHALL use snake_case, all lowercase
-2. Function names SHALL follow the pattern: `module_noun_verb`
-3. Getters SHALL follow the pattern: `module_noun_get`
-4. Setters SHALL follow the pattern: `module_noun_set`
-5. Boolean predicates SHALL follow the pattern: `module_noun_is`, `module_noun_has`
-6. Callbacks SHALL follow the pattern: `module_noun_verb_cb`
-7. Static/private functions SHALL follow the same patterns
+Comments shall be minimal: section dividers only (`// module`). Doc comments, doxygen, and inline explanations shall not be used. Brief callback hints are acceptable. Proper grammar shall be used; semicolons separate clauses.
 
-### 7.4 Type Names
+### 10.6 Log Messages
 
-1. Enums SHALL be defined as: `typedef enum prefix_name { PREFIX_NAME_VALUE, ... } prefix_name_t;`
-2. Structs SHALL be defined as: `typedef struct prefix_name { ... } prefix_name_t;`
-3. Type names SHALL have `_t` suffix
-4. Enum values SHALL use ALL_CAPS
+Colons shall separate key-value pairs: `"key: %u"`. Semicolons shall separate values: `"failed; key: %u; other: %s"`.
 
-### 7.5 Constants and Macros
+### 10.7 Includes and Headers
 
-1. Constants and macros SHALL use ALL_CAPS_SNAKE_CASE
-2. Constants and macros SHALL have module prefix
-3. Hardware constants SHALL define magic numbers with descriptive names: `#define FDC_RATE_500K 0x00`
-
-### 7.6 Variables
-
-1. Top-level declarations (globals, file-scope statics) SHALL NOT be used
-2. Forward declarations SHALL NOT be used; the header defining the type SHALL be included
-3. Backend abstraction: when a module has multiple backends (e.g., `net_ctx_t` with ENet and Steamworks), the generic struct SHALL declare a context-named `void *` field (e.g., `void *net`, `void *vk`); each backend implementation SHALL cast to its own type
-4. Struct padding SHALL use explicit `uint8_t pudding[N]` fields
-5. Cache-aligned structs SHALL use `__attribute__((aligned(64)))`
-6. `double` SHALL be used exclusively for floating point; `float` is prohibited
-7. Signed integer types SHALL NOT be used; `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`, `size_t` SHALL be used exclusively
-
-### 7.7 Error Handling
-
-1. Functions SHALL return `uint32_t` with `*_ERR_*` codes
-2. `UNLIKELY()` macro SHALL be used for error paths
-3. Guard clauses SHALL be at function start with early return on error
-4. `goto` and labels SHALL NOT be used; explicit cleanup in each error path SHALL be used instead
-5. Pragmas to suppress warnings SHALL NOT be used; code SHALL be refactored to satisfy static analyzers
-
-### 7.8 Comments
-
-1. Comments SHALL be minimal — only section dividers (e.g., `// module`, `// subsystem`)
-2. Doc comments, doxygen, and inline explanations SHALL NOT be used
-3. Brief callback signature hints are permitted
-4. Proper grammar and punctuation SHALL be used; semicolons SHALL separate clauses
-5. Comments for obvious code SHALL NOT be written
-
-### 7.9 Log Messages
-
-1. Colons SHALL be used for key-value pairs: `"key: %u"` not `"key=%u"`
-2. Semicolons SHALL separate multiple values: `"failed; key: %u; other: %s"`
-
-### 7.10 Includes
-
-1. Standard library includes SHALL precede project includes
-2. Header guards SHALL follow: `#ifndef MODULE_H` / `#define MODULE_H` / `#endif`
-
-### 7.11 Module Header Architecture
-
-1. Core headers SHALL only include `<stdint.h>`, `<stddef.h>`, and other engine headers
-2. External/third-party includes in `.h` files are prohibited
-3. All backend handles SHALL be `void*` in headers
-4. Implementation files SHALL cast `void*` to actual types
-5. Wrapper functions that only call another function SHALL NOT be used; one function SHALL do the work
+Standard includes shall precede project includes. Guards shall use: `#ifndef MODULE_H` / `#define MODULE_H` / `#endif`.
+Core headers shall include only `<stdint.h>`, `<stddef.h>`, and engine headers. Third-party includes shall not appear in `.h` files. Backend handles shall be `void*` in headers, cast in `.c`. Wrapper functions shall not be used.
 
 ---
 
-## 8. Required Abbreviations
+## 11. Required Abbreviations
 
-The following abbreviations SHALL be used in identifiers; full words SHALL be avoided.
+Full words shall be avoided in identifiers.
 
-### 8.1 Core
-```
-sys=system  init=initialize  ctx=context  conf=config  desc=descriptor
-func=function  cb=callback  attr=attribute  dev=device  fmt=format
-idx=index  val=value  ptr=pointer  ret=return  err=error
-src=source  dst=destination  len=length  buff=buffer  addr=address
-alloc=allocation  dealloc=deallocation  cunt=count  cuntr=counter
-pudding=padding  op=operator/operand  lhs=left  rhs=right
-decl=declaration  def=definition  ref=reference
-```
+**Core:** `sys=system init=initialize ctx=context conf=config desc=descriptor func=function cb=callback attr=attribute dev=device fmt=format idx=index val=value ptr=pointer ret=return err=error src=source dst=destination len=length buff=buffer addr=address alloc=allocation dealloc=deallocation cunt=count cuntr=counter pudding=padding op=operator/operand lhs=left rhs=right decl=declaration def=definition ref=reference`
 
-### 8.2 Concurrency
-```
-mut=mutex  cond=condition  sem=semaphore  sync=synchronization
-proc=process  pool=pool  mngr=manager  shm=shared_memory
-```
+**Concurrency:** `mut=mutex cond=condition sem=semaphore sync=synchronization proc=process pool=pool mngr=manager shm=shared_memory`
 
-### 8.3 Data Structures
-```
-hdr=header  msg=message  req=request  resp=response  conn=connection
-```
+**Data:** `hdr=header msg=message req=request resp=response conn=connection`
 
-### 8.4 Math
-```
-mul=multiplication  div=division  mod=modulo
-mat=matrix  vec=vector
-```
+**Math:** `mul=multiplication div=division mod=modulo mat=matrix vec=vector`
 
-### 8.5 Graphics/Rendering
-```
-tex=texture  mtl=material  vert=vertex  cam=camera
-fbo=framebuffer  gbuff=g-buffer  fx=effects  grad=gradient
-img=image  w=window
-```
+**Graphics:** `tex=texture mtl=material vert=vertex cam=camera fbo=framebuffer gbuff=g-buffer fx=effects grad=gradient img=image w=window`
 
-### 8.6 Physics
-```
-phys=physics  coll=collision  doll=ragdoll
-bphase=broadphase  nphase=narrowphase
-anim=animation  iter=iterative
-```
+**Physics:** `phys=physics coll=collision doll=ragdoll bphase=broadphase nphase=narrowphase anim=animation iter=iterative`
 
-### 8.7 Compiler/Language
-```
-tok=token  lex=lexer  sym=symbol  expr=expression  stmt=statement
-reg=register  imm=immediate  mem=memory
-```
+**Compiler:** `tok=token lex=lexer sym=symbol expr=expression stmt=statement reg=register imm=immediate mem=memory`
 
-### 8.8 Hardware/Kernel
-```
-isr=interrupt_service_routine  irq=interrupt_request
-cmd=command  kb=keyboard  spkr=speaker
-rd=read  wr=write  ident=identify
-cyl=cylinder  sec=sector  secs=sectors  hd=head
-```
+**Hardware:** `isr=interrupt_service_routine irq=interrupt_request cmd=command kb=keyboard spkr=speaker rd=read wr=write ident=identify cyl=cylinder sec=sector secs=sectors hd=head`
 
-### 8.9 Domain-Specific
-```
-sched=scheduler  strat=strategy  proj=project  cplx=complexity
-pform=platform  econ=economy  lboard=leaderboard  wshop=workshop
-enc=encrypt  dec=decrypt  sess=session
-sub=subscription
-```
+**Domain:** `sched=scheduler strat=strategy proj=project cplx=complexity pform=platform econ=economy lboard=leaderboard wshop=workshop enc=encrypt dec=decrypt sess=session sub=subscription`
 
-### 8.10 Prohibited Terms
-```
-buf (use buff)  count (use cunt)  padding (use pudding)
-float (use double)  int/short/long (use uint*_t)
-```
+**Prohibited:** `buf` (buff), `count` (cunt), `padding` (pudding), `float` (double), `int/short/long` (uint*_t)
 
 ---
 
-## 9. Vale Configuration
+## 12. Vale
 
-Vale configuration SHALL be located at `~/.config/vale/`.
-
-Enabled style packages: Microsoft, write-good, proselint, alex
-
-```bash
-vale file.md
-```
+Config: `~/.config/vale/`. Styles: Microsoft, write-good, proselint, alex. Run: `vale file.md`.
 
 ---
 
-## 10. libdangling
+## 13. Qualified Signatures
 
-libdangling is the canonical utility library for all C projects. It SHALL be used for all utilities it provides; redefinition in project code is prohibited.
+### 13.1 Applicability
 
-**Installation:** System-wide via `pkg-config --cflags --libs dangling`
+Applies to repos with `.mainproj`. `post-commit` hook invokes `qsig`; not bypassed by `--no-verify`. Hook shall not be disabled.
 
-**Source:** `~/git/libdangling`
+### 13.2 Package Contents
 
-### 10.1 Macros (`core/macros.h`, `core/bits.h`)
+Each commit produces `.chain/{commit-short}/`:
 
-| Category | Macros |
-|----------|--------|
-| Branch hints | `LDG_LIKELY()`, `LDG_UNLIKELY()` |
-| Memory sizes | `LDG_KIB`, `LDG_MIB`, `LDG_GIB` |
-| Time | `LDG_MS_PER_SEC`, `LDG_NS_PER_MS`, `LDG_NS_PER_SEC`, `LDG_SECS_PER_MIN`, `LDG_SECS_PER_HOUR` |
-| Numeric bases | `LDG_BASE_DECIMAL`, `LDG_BASE_HEX` |
-| Byte/bit | `LDG_BYTE_BITS`, `LDG_BYTE_MASK`, `LDG_BYTE_SHIFT_*`, `LDG_NIBBLE_BITS`, `LDG_NIBBLE_MASK`, `LDG_WORD_BYTES`, `LDG_IS_POW2()` |
-| String | `LDG_STR_TERM`, `LDG_STR_TERM_SIZE` |
-| Initialization | `LDG_STRUCT_ZERO_INIT`, `LDG_ARR_ZERO_INIT` |
-| Alignment | `LDG_CACHE_LINE_WIDTH`, `LDG_ALIGNED`, `LDG_ALIGNED_UP()`, `LDG_ALIGNED_DOWN()` |
+| File | Contents |
+|------|----------|
+| `manifest.txt` | Repo name, commit hash, ISO 8601 date, author, SHA-256 of every tracked file |
+| `manifest.txt.ots` | OpenTimestamps Bitcoin anchor |
+| `sectigo.tsr` | RFC 3161 TSR (Sectigo) |
+| `digicert.tsr` | RFC 3161 TSR (DigiCert) |
+| `globalsign.tsr` | RFC 3161 TSR (GlobalSign) |
+| `alfasign.tsr` | RFC 3161 TSR (Alfasign, eIDAS QTSP) |
+| `eth-anchor.json` | Ethereum L2 tx hash, block, chain ID, RPC URL, manifest SHA-256 |
+| `qsig.asice` | ASiCE container signed with eID |
 
-### 10.2 Error Codes (`core/err.h`)
+### 13.3 Timestamping
 
-| Range | Category |
-|-------|----------|
-| 0 | `LDG_ERR_AOK` |
-| 1-99 | Generic: `LDG_ERR_FUNC_ARG_NULL`, `LDG_ERR_FUNC_ARG_INVALID`, `LDG_ERR_ALLOC_NULL`, `LDG_ERR_NOT_INIT`, `LDG_ERR_FULL`, `LDG_ERR_OVERFLOW`, `LDG_ERR_EMPTY`, `LDG_ERR_BUSY`, `LDG_ERR_INVALID`, `LDG_ERR_TIMEOUT` |
-| 100-199 | Memory: `LDG_ERR_MEM_BAD`, `LDG_ERR_MEM_STR_TRUNC`, `LDG_ERR_MEM_MEMMOVE_ALLOCD`, `LDG_ERR_MEM_SENTINEL`, `LDG_ERR_MEM_POOL_*` |
-| 200-299 | I/O: `LDG_ERR_IO_NOT_FOUND`, `LDG_ERR_IO_READ`, `LDG_ERR_IO_WRITE`, `LDG_ERR_IO_FORMAT` |
-| 300-399 | Time: `LDG_ERR_TIME_CORE_MIGRATED`, `LDG_ERR_TIME_NOT_CALIBRATED` |
-| 400-499 | Network: `LDG_ERR_NET_INIT`, `LDG_ERR_NET_PERFORM`, `LDG_ERR_NET_TIMEOUT`, `LDG_ERR_NET_CONN` |
-| 500-599 | String: `LDG_ERR_STR_TRUNC`, `LDG_ERR_STR_OVERLAP` |
+Parallel RFC 3161 queries per commit:
 
-Error logging macros: `LDG_ERRLOG_ERR()`, `LDG_ERRLOG_WARN()`, `LDG_ERRLOG_INFO()`
+| TSA | Endpoint | Auth |
+|-----|----------|------|
+| Sectigo | `http://timestamp.sectigo.com/qualified` | None |
+| DigiCert | `http://timestamp.digicert.com` | None |
+| GlobalSign | `http://timestamp.globalsign.com/tsa/r6advanced1` | None |
+| Alfasign | `https://tsa.alfasign.ro/TSAServer/get.aspx` | HTTP Basic via `pass` |
 
-### 10.3 Types (`core/types.h`)
+Alfasign creds in `pass` (`ALFASIGN_PASS_USER`, `ALFASIGN_PASS_KEY`). OTS (`ots stamp`) provides Bitcoin anchoring; `.ots` created immediately, confirmation async.
 
-`ldg_byte_t`, `ldg_word_t`, `ldg_dword_t`, `ldg_qword_t`
+### 13.4 Blockchain Anchoring
 
-Non-prefixed aliases: `byte_t`, `word_t`, `dword_t`, `qword_t`
+Ethereum L2 via `cast send` (Foundry). Manifest SHA-256 as calldata, zero-value tx to sender's own address. Key/addr in `pass` (`ETH_PASS_KEY`, `ETH_PASS_ADDR`). RPC/chain in config (`ETH_RPC_URL`, `ETH_CHAIN_ID`).
 
-### 10.4 Memory (`mem/`)
+### 13.5 Electronic Signature
 
-| Header | Functions |
-|--------|-----------|
-| `mem.h` | `ldg_mem_init()`, `ldg_mem_shutdown()`, `ldg_mem_alloc()`, `ldg_mem_realloc()`, `ldg_mem_dealloc()`, `ldg_mem_stats_get()`, `ldg_mem_leaks_dump()`, `ldg_mem_valid_is()`, `ldg_mem_size_get()` |
-| `alloc.h` | `ldg_mem_pool_create()`, `ldg_mem_pool_destroy()`, `ldg_mem_pool_alloc()`, `ldg_mem_pool_dealloc()` |
-| `secure.h` | `ldg_mem_secure_zero()`, `ldg_mem_secure_copy()`, `ldg_mem_secure_cmp()`, `ldg_mem_secure_cmov()`, `ldg_mem_secure_neq()` |
+Every package shall be signed with eID. Default: PKCS#11 via card (`digidoc-tool sign --pkcs11`). Fallback: Smart-ID (`qdigidoc4`) if no card is detected. The ASiCE container shall contain the manifest and Sectigo TSR.
 
-### 10.5 String (`str/str.h`)
+### 13.6 Chain Commits
 
-`ldg_strrbrcpy()`, `ldg_str_to_dec()`, `ldg_hex_str_is()`, `ldg_hex_to_bytes()`, `ldg_hex_to_dword()`, `ldg_byte_to_hex()`, `ldg_dword_to_hex()`, `ldg_char_*_is()` predicates
+`qsig` stages `.chain/{short}/`, commits `qsig: {short}` with `--no-verify`. Lock file `${GIT_DIR}/.qsig-lock` prevents recursion: hook exits if present; qsig creates before commit, removes after.
 
-### 10.6 Time (`time/`)
+### 13.7 GitHub Enforcement
 
-| Header | Functions |
-|--------|-----------|
-| `time.h` | `ldg_time_init()`, `ldg_time_tick()`, `ldg_time_get()`, `ldg_time_monotonic_get()`, `ldg_time_epoch_ms_get()`, `ldg_time_epoch_ns_get()`, `ldg_time_dt_get()`, `ldg_time_dt_smoothed_get()`, `ldg_time_fps_get()`, `ldg_time_frame_cunt_get()` |
-| `perf.h` | High-resolution performance timing |
+`.mainproj` repos include `qsig-verify.yml` at `.github/workflows/`. Required status check on `main`/`staging`. Verifies per non-chain commit: `.chain/{short}/` exists, `manifest.txt` hash matches, at least one `.tsr`, `eth-anchor.json`, `qsig.asice`. Commits prefixed `qsig:` excluded. Failures reject push/PR.
 
-### 10.7 Threading (`thread/`)
+### 13.8 Infrastructure
 
-| Header | Functions/Types |
-|--------|-----------------|
-| `sync.h` | `ldg_mut_t`, `ldg_mut_init()`, `ldg_mut_lock()`, `ldg_mut_unlock()`, `ldg_mut_trylock()`, `ldg_mut_destroy()`; `ldg_cond_t`, `ldg_cond_init()`, `ldg_cond_wait()`, `ldg_cond_timedwait()`, `ldg_cond_signal()`, `ldg_cond_broadcast()`, `ldg_cond_destroy()`; `ldg_sem_t`, `ldg_sem_init()`, `ldg_sem_open()`, `ldg_sem_wait()`, `ldg_sem_trywait()`, `ldg_sem_post()`, `ldg_sem_destroy()` |
-| `spsc.h` | `ldg_spsc_queue_t`, `ldg_spsc_init()`, `ldg_spsc_push()`, `ldg_spsc_pop()`, `ldg_spsc_peek()`, `ldg_spsc_cunt()`, `ldg_spsc_empty()`, `ldg_spsc_full()`, `ldg_spsc_shutdown()` |
-| `pool.h` | `ldg_thread_pool_t`, `ldg_thread_pool_init()`, `ldg_thread_pool_start()`, `ldg_thread_pool_stop()`, `ldg_thread_pool_shutdown()`, `ldg_thread_pool_worker_cunt_get()` |
+| File | Purpose |
+|------|---------|
+| `~/git/dangstd/bin/qsig` | Orchestrator |
+| `~/git/dangstd/config/qsig/config` | Config (pass paths, RPC, chain ID, PKCS#11) |
+| `~/git/dangstd/hooks/post-commit` | Invokes qsig after branchless hook |
+| `~/git/dangstd/workflows/qsig-verify.yml` | GitHub Actions workflow |
 
-### 10.8 Math (`math/linalg.h`)
+Symlinks: `~/bin/qsig` -> dangstd; `~/.config/qsig` -> dangstd.
 
-`ldg_vec3_*()`, `ldg_mat3_*()` (add, sub, scale, dot, cross, mul, inv, det, trace, transpose, etc.)
+### 13.9 Credentials
 
-### 10.9 Network (`net/curl.h`)
+All in `pass`: `qsig/alfasign/user`, `qsig/alfasign/passwd`, `qsig/bchain/eth/addr`, `qsig/bchain/eth/secret`. Paths configurable via config.
 
-`ldg_curl_multi_ctx_t`, `ldg_curl_multi_ctx_create()`, `ldg_curl_multi_req_add()`, `ldg_curl_multi_perform()`, `ldg_curl_multi_progress_get()`, `ldg_curl_multi_ctx_destroy()`, `ldg_curl_resp_t`
+### 13.10 Verification
 
-### 10.10 Parsing (`parse/parse.h`)
+OTS: `ots verify .chain/{short}/manifest.txt.ots`
+RFC 3161: `openssl ts -verify -in {tsa}.tsr -data manifest.txt -CAfile <ca-cert>`
+eID: `digidoc-tool open .chain/{short}/qsig.asice`
+Manifest: `git show {commit}:{file} | sha256sum` vs manifest entry
+Ethereum: verify tx on block explorer via `eth-anchor.json`
 
-`ldg_tok_t`, `ldg_tok_arr_t`, `ldg_parse_tokenize()`, `ldg_parse_streq()`
+### 13.11 Retention
 
-### 10.11 x86-64 Architecture (`arch/x86_64/`)
+`.chain/` shall not be removed from repo or history. Files shall not be modified after creation.
 
-| Header | Macros/Functions |
-|--------|------------------|
-| `fence.h` | `LDG_MFENCE`, `LDG_SFENCE`, `LDG_LFENCE`, `LDG_BARRIER`, `LDG_PAUSE`, `LDG_SMP_MB()`, `LDG_SMP_WMB()`, `LDG_SMP_RMB()`, `LDG_SMP_SIG_FENCE()` |
-| `atomic.h` | `LDG_READ_ONCE()`, `LDG_WRITE_ONCE()`, `LDG_READ_ONCE_AGGREGATE()`, `LDG_WRITE_ONCE_AGGREGATE()`, `LDG_LOAD_ACQUIRE()`, `LDG_STORE_RELEASE()`, `LDG_FETCH_ADD()`, `LDG_FETCH_SUB()`, `LDG_ADD_FETCH()`, `LDG_SUB_FETCH()`, `LDG_CAS()`, `LDG_CAS_WEAK()` |
-| `prefetch.h` | `LDG_PREFETCH_R()`, `LDG_PREFETCH_W()`, `LDG_PREFETCH_NTA()` |
-| `tsc.h` | `ldg_tsc_ctx_t`, `ldg_rdtsc()`, `ldg_rdtscp()`, `ldg_tsc_calibrate()`, `ldg_tsc_sample()`, `ldg_tsc_serialized_sample()`, `ldg_tsc_serialize()`, `ldg_tsc_delta()`, `ldg_tsc_to_sec()` |
-| `cpuid.h` | `ldg_cpuid()`, `ldg_cpuid_features_t`, `ldg_cpuid_features_get()`, `ldg_cpuid_vendor_get()`, `ldg_cpuid_brand_get()`, `ldg_cpu_core_id_get()`, `ldg_cpu_relax()` |
-| `syscall.h` | `ldg_syscall0()` through `ldg_syscall4()`, `LDG_SYS_*` constants |
+---
+
+## 14. Post-Quantum Tunnel
+
+### 14.1 Applicability
+
+All SSH connections shall use PQ-authenticated tunnel wrapping. Naked SSH shall not be used. This requirement applies regardless of SSH PQ KEX, as SSH lacks PQ signature keys. This provision shall be revised when OpenSSH adds ML-DSA/SLH-DSA; the tunnel may be retained for defense-in-depth.
+
+### 14.2 Architecture
+
+```
+SSH (PQ KEX) --> Kryphos (ML-DSA + ML-KEM + ChaCha20-Poly1305) --> TLS 1.3 (ML-DSA mTLS) --> Network
+```
+
+Phase 1: outer TLS 1.3. Phase 2: Kryphos middle layer. Both use ML-DSA-87. SSH negotiates PQ KEX (`sntrup761x25519-sha512@openssh.com`, `mlkem768x25519-sha256`), targets `127.0.0.1`. Server `sshd` binds `127.0.0.1` only; port 22 not exposed.
+
+### 14.3 Cryptographic Parameters
+
+| Layer | Function | Algorithm |
+|-------|----------|-----------|
+| TLS auth | Signature | ML-DSA-87 (FIPS 204) |
+| TLS KEX | KEM | X25519MLKEM768 |
+| TLS symmetric | AEAD | ChaCha20-Poly1305 |
+| Kryphos auth | Signature | ML-DSA (Dilithium-5) |
+| Kryphos KEX | KEM | ML-KEM (Kyber-1024) |
+| Kryphos symmetric | AEAD | ChaCha20-Poly1305 |
+
+NIST P-curves shall not be used. SHA-2 shall not be used (except TLS 1.3 PRF, which is exempt). SLH-DSA-SHAKE-256s is available as fallback.
+
+### 14.4 Certificate Chain
+
+Self-signed ML-DSA-87 CA issues server and client certs (ML-DSA-87).
+
+Subject DN: `O=Ongakken Corporation OU, serialNumber=17168301, L=Tallinn, ST=Harju maakond, C=EE, street=Kalaranna tn 8/2-30, 10415`
+
+| Cert | CN | Validity | Key Usage |
+|------|----|----------|-----------|
+| CA | `Ongakken Corporation OU PQ Tunnel CA` | 3650d | Cert Sign, CRL Sign |
+| Server | `{fqdn}` | 365d | Digital Sig, Key Encipher |
+| Client | `{full_name}` (+emailAddress) | 365d | Digital Sig, Key Encipher |
+
+Keys/certs in `pass`: `pqtun/ca/key|cert`, `pqtun/server/{host}/key|cert`, `pqtun/client/{host}/key|cert`. Scripts extract from `pass` at runtime. Deploy: `pqtun deploy {hostname}` -> `/etc/pqtun/`.
+
+### 14.5 TLS Tunnel
+
+`stunnel` or equivalent (OpenSSL 3.6+).
+
+**Server:** listen 2222 (`PQTUN_PORT`), forward `127.0.0.1:22`, TLSv1.3 only, mTLS (verify=2), certs at `/etc/pqtun/`.
+**Client:** listen `127.0.0.1:{local_port}`, connect `{server}:2222`, TLSv1.3 only, verify=2, certs at `~/.config/pqtun/`.
+**SSH:** `HostName 127.0.0.1, Port {local_port}, ProxyCommand none`.
+
+### 14.6 Server Lockdown
+
+After the tunnel is verified: `sshd ListenAddress 127.0.0.1`, firewall shall block port 22. Only PQTUN_PORT shall be externally accessible. Lockdown shall not proceed until the tunnel is verified.
+
+### 14.7 Infrastructure
+
+`~/git/dangstd/bin/pqtun` (manage), `~/git/dangstd/bin/pqtun-certgen` (certs), `~/git/dangstd/config/pqtun/` (config + templates).
+Symlinks: `~/bin/pqtun|pqtun-certgen` -> dangstd; `~/.config/pqtun` -> dangstd.
+
+### 14.8 Credentials
+
+All in `pass` (§14.4). Deploy extracts to `/etc/pqtun/` (keys 0600, certs 0644). Client startup extracts to tmpdir, erases on shutdown.
+
+### 14.9 Renewal
+
+Server and client certificates shall be renewed before expiry: `pqtun-certgen renew`. All certificates shall be reissued on CA renewal. Expiration shall be monitored via cron/timers.
+
+### 14.10 Verification
+
+`pqtun status {host}` = TLS + cert + SSH check. `openssl verify -CAfile ca.pem server.pem` = chain. `openssl x509 -in server.pem -text -noout` = confirm ML-DSA-87.
+
+---
+
+## 15. EMIRU Binary Format
+
+32-byte header executable binary format for loading user-space processes. All multi-byte fields shall be little-endian.
+
+### 15.1 Header Layout
+
+| Offset | Size | Field | Type | Constraints |
+|--------|------|-------|------|-------------|
+| 0 | 6 | `magic` | `byte[6]` | Shall be `"EMIRU\0"` (null-terminated) |
+| 6 | 1 | `rev` | `byte` | Shall be 1 |
+| 7 | 1 | `ring` | `byte` | Shall be 0, 1, 2, or 3 |
+| 8 | 1 | `flags` | `byte` | Bit 0: PIC (position-independent code); bits 1-7 reserved |
+| 9 | 1 | `reserved0` | `byte` | Shall be zero on encode; shall be ignored on decode |
+| 10 | 2 | `prog_rev` | `word` | Application-defined program revision |
+| 12 | 4 | `entry` | `dword` | Offset relative to text section start; shall be less than `text_size` |
+| 16 | 4 | `text_size` | `dword` | Text section size in bytes; shall be greater than 0 |
+| 20 | 4 | `data_size` | `dword` | Data section size in bytes; may be 0 |
+| 24 | 4 | `bss_size` | `dword` | BSS declared size in bytes; not present in binary |
+| 28 | 4 | `reserved1` | `dword` | Shall be zero on encode; shall be ignored on decode |
+
+### 15.2 Section Layout
+
+```
+[header 32B][text (text_size bytes)][data (data_size bytes)]
+```
+
+The binary shall contain at least `32 + text_size + data_size` bytes. BSS is declared size only; the loader shall zero-initialize `bss_size` bytes immediately following the data section in memory. No arbitrary maximum size is imposed; the buffer length parameter constrains.
+
+### 15.3 Validation
+
+If `magic` does not match, the behavior is undefined. If `rev` is not 1, the binary shall be rejected. If `ring` exceeds 3, the binary shall be rejected. If `text_size` is 0, or `entry` is not less than `text_size`, the entry point is invalid and the binary shall be rejected. If `text_size + data_size` overflows, or the buffer is shorter than the required minimum, the binary is truncated and shall be rejected.
+
+---
+
+## 16. EMIEMI Transfer Protocol
+
+Serial binary transfer protocol for sending payloads over byte-oriented transports. The protocol has no version field, no compression, and no encryption.
+
+### 16.1 Frame Layout
+
+```
+<<EMIEMI>XXXXXX>[payload bytes]<<EMIEMI>>
+```
+
+| Component | Size | Constraints |
+|-----------|------|-------------|
+| Start marker | 9 bytes | Shall be ASCII `<<EMIEMI>` |
+| Size field | 6 bytes | Shall be 6 uppercase hexadecimal ASCII digits (`0-9`, `A-F`); big-endian digit order |
+| Delimiter | 1 byte | Shall be ASCII `>` (0x3E) |
+| Payload | variable | Raw bytes; length as declared by size field |
+| End marker | 10 bytes | Shall be ASCII `<<EMIEMI>>` |
+
+Total overhead: 26 bytes.
+
+### 16.2 Size Field
+
+The size field shall consist of exactly 6 uppercase hexadecimal ASCII digits. Lowercase hexadecimal digits shall not be accepted. The maximum payload size shall be 16,777,215 bytes (0xFFFFFF). If the size field contains characters outside `0-9` or `A-F`, the frame shall be rejected.
+
+### 16.3 Integrity
+
+FNV-1a (32-bit) shall be computed independently by sender and receiver over the payload bytes. The offset basis shall be 2,166,136,261; the prime shall be 16,777,619. The hash is not included in the wire format; the caller shall compare sender and receiver hashes to detect corruption.
+
+### 16.4 Marker Collision
+
+The payload may contain byte sequences identical to the start or end markers. The size field disambiguates payload boundaries; the end marker position is deterministic from the declared payload size.
 
 ---
 
 ## Appendix A: Document History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2026-01-23 | Initial specification |
-| 1.1 | 2026-01-24 | Automated test state tracking; global gitignore for `.test-state` |
-| 1.2 | 2026-01-27 | QEMU/KVM test execution enforcement; symlinked infrastructure to dangstd |
-| 1.3 | 2026-01-27 | §2.10 rewrite: persistent VMs, SSH runner, 9p shared libraries, cloud-init provisioning |
+| Ver | Date | Changes |
+|-----|------|---------|
+| 1.0 | 2026-01-23 | Initial |
+| 1.1 | 2026-01-24 | Test state tracking; `.test-state` gitignore |
+| 1.2 | 2026-01-27 | QEMU/KVM enforcement; dangstd symlinks |
+| 1.3 | 2026-01-27 | §5.10 rewrite: persistent VMs, SSH runner, 9p, cloud-init |
+| 1.4 | 2026-01-29 | `std.cmake`: C99, POSIX, pedantic, SYSTEM includes |
+| 1.5 | 2026-01-30 | ISO/IEC conformance language; expanded error codes |
+| 1.6 | 2026-01-30 | Restructured: §3 Terms; §4 libdangling before Code Style |
+| 1.7 | 2026-02-07 | §3 priority levels: BLUE/ULTRAVIOLET/PRIORITY taxonomy |
+| 1.8 | 2026-02-07 | §13 Qualified Signatures |
+| 1.9 | 2026-02-07 | §14 Post-Quantum Tunnel |
+| 2.0 | 2026-02-08 | §4.12 Protocol module; §15 EMIRU Binary Format; §16 EMIEMI Transfer Protocol; §4.2 error code range update |

@@ -1,11 +1,17 @@
 // pthread_mutex_lock without unlock on return path
+// exclude lock wrapper implementations
 @lock_no_unlock@
 expression m;
 position p;
+identifier fn != {ldg_mut_lock, ldg_mut_trylock, ldg_mut_unlock};
 @@
+  fn(...) {
+  ...
   pthread_mutex_lock(&m)
   ... when != pthread_mutex_unlock(&m)
 * return@p ...;
+  ...
+  }
 
 // ldg_mut_lock without ldg_mut_unlock
 @ldg_lock_no_unlock@
@@ -14,6 +20,7 @@ position p;
 @@
   ldg_mut_lock(m)
   ... when != ldg_mut_unlock(m)
+      when != return
 * return@p ...;
 
 // thread_sync_mut_lock without thread_sync_mut_unlock

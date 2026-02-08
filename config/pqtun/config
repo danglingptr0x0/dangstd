@@ -1,0 +1,6 @@
+PQTUN_PORT=2222
+PQTUN_LOCAL_PORT=2222
+PQTUN_OPENSSL=/usr/bin/openssl
+PQTUN_STUNNEL=/usr/bin/stunnel
+PQTUN_PASS_CA_KEY=pqtun/ca/key
+PQTUN_PASS_CA_CERT=pqtun/ca/cert

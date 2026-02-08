@@ -1,0 +1,14 @@
+pid = {{PQTUN_RUN_DIR}}/stunnel-client-{{HOST}}.pid
+foreground = yes
+
+[pqtun-{{HOST}}]
+client = yes
+accept = 127.0.0.1:{{LOCAL_PORT}}
+connect = {{REMOTE}}:{{PQTUN_PORT}}
+cert = {{CLIENT_CERT}}
+key = {{CLIENT_KEY}}
+CAfile = {{CA_CERT}}
+verify = 2
+sslVersion = TLSv1.3
+curves = X25519MLKEM768
+ciphersuites = TLS_CHACHA20_POLY1305_SHA256

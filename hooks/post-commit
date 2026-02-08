@@ -3,3 +3,9 @@
 
 git branchless hook post-commit "$@"
 ## END BRANCHLESS CONFIG
+
+GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
+if [ -f "${GIT_DIR}/.qsig-lock" ]; then
+    exit 0
+fi
+command -v qsig && qsig || true

@@ -1,0 +1,13 @@
+pid = /run/pqtun/stunnel-server.pid
+foreground = yes
+
+[pqtun]
+accept = 0.0.0.0:{{PQTUN_PORT}}
+connect = 127.0.0.1:22
+cert = /etc/pqtun/server.pem
+key = /etc/pqtun/server.key
+CAfile = /etc/pqtun/ca.pem
+verify = 2
+sslVersion = TLSv1.3
+curves = X25519MLKEM768
+ciphersuites = TLS_CHACHA20_POLY1305_SHA256

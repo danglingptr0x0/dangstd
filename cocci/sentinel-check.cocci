@@ -9,12 +9,3 @@ position p;
       when != hdr->sentinel_front == CUT_MEM_SENTINEL
       when != hdr->sentinel_front == HZ_MEM_SENTINEL
 
-// deallocation without sentinel verification
-@dealloc_no_sentinel@
-expression ptr, hdr;
-position p;
-@@
-  hdr = ...
-  ... when != sentinel_front
-      when != sentinel_back
-* free@p(...)

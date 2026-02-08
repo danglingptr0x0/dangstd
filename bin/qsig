@@ -1,0 +1,227 @@
+#!/bin/bash
+set -e
+
+SIGN_MODE=""
+case "${1}" in
+    --smartid) SIGN_MODE="smartid" ;;
+    --id) SIGN_MODE="id" ;;
+esac
+
+fail() {
+    echo "qsig: FAILED: $1"
+    rm -rf "${CHAIN_DIR}"
+    exit 1
+}
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+if [ ! -f "${REPO_ROOT}/.mainproj" ]; then
+    exit 0
+fi
+
+GIT_DIR=$(git rev-parse --git-dir)
+LOCK="${GIT_DIR}/.qsig-lock"
+
+if [ -f "${LOCK}" ]; then
+    exit 0
+fi
+
+CONF="${HOME}/.config/qsig/config"
+if [ -f "${CONF}" ]; then
+    . "${CONF}"
+fi
+
+COMMIT=$(git rev-parse HEAD)
+SHORT=$(git rev-parse --short HEAD)
+DATE=$(git log -1 --format=%cI HEAD)
+AUTHOR=$(git log -1 --format="%an <%ae>" HEAD)
+CHAIN_DIR="${REPO_ROOT}/.chain/${SHORT}"
+
+echo "qsig: ${SHORT} (${COMMIT})"
+echo "qsig: date: ${DATE}"
+echo "qsig: author: ${AUTHOR}"
+
+mkdir -p "${CHAIN_DIR}"
+
+echo "qsig: generating manifest"
+MANIFEST="${CHAIN_DIR}/manifest.txt"
+{
+    echo "repository: $(basename "${REPO_ROOT}")"
+    echo "commit: ${COMMIT}"
+    echo "date: ${DATE}"
+    echo "author: ${AUTHOR}"
+    echo ""
+    git ls-tree -r --name-only HEAD | while read -r f; do
+        hash=$(git show "HEAD:${f}" | sha256sum | cut -d' ' -f1)
+        echo "${hash}  ${f}"
+    done
+} > "${MANIFEST}"
+FILE_CUNT=$(grep -c '  ' "${MANIFEST}" || true)
+echo "qsig: manifest: ${FILE_CUNT} files hashed"
+
+echo "qsig: timestamping (parallel)"
+PIDS=""
+FAIL_FLAG=$(mktemp)
+echo 0 > "${FAIL_FLAG}"
+
+(
+    ots stamp "${MANIFEST}" || { echo 1 > "${FAIL_FLAG}"; echo "qsig: ots: FAILED"; exit 1; }
+    echo "qsig: ots: stamp submitted"
+) &
+PIDS="$PIDS $!"
+
+(
+    TSQ=$(mktemp)
+    openssl ts -query -data "${MANIFEST}" -sha256 -cert -out "${TSQ}"
+    curl -sf -H "Content-Type: application/timestamp-query" --data-binary @"${TSQ}" \
+        "http://timestamp.sectigo.com/qualified" -o "${CHAIN_DIR}/sectigo.tsr" || { echo 1 > "${FAIL_FLAG}"; echo "qsig: tsa: sectigo FAILED"; rm -f "${TSQ}"; exit 1; }
+    rm -f "${TSQ}"
+    echo "qsig: tsa: sectigo ok"
+) &
+PIDS="$PIDS $!"
+
+(
+    TSQ=$(mktemp)
+    openssl ts -query -data "${MANIFEST}" -sha256 -cert -out "${TSQ}"
+    curl -sf -H "Content-Type: application/timestamp-query" --data-binary @"${TSQ}" \
+        http://timestamp.digicert.com -o "${CHAIN_DIR}/digicert.tsr" || { echo 1 > "${FAIL_FLAG}"; echo "qsig: tsa: digicert FAILED"; rm -f "${TSQ}"; exit 1; }
+    rm -f "${TSQ}"
+    echo "qsig: tsa: digicert ok"
+) &
+PIDS="$PIDS $!"
+
+(
+    TSQ=$(mktemp)
+    openssl ts -query -data "${MANIFEST}" -sha256 -cert -out "${TSQ}"
+    curl -sf -H "Content-Type: application/timestamp-query" --data-binary @"${TSQ}" \
+        http://timestamp.globalsign.com/tsa/r6advanced1 -o "${CHAIN_DIR}/globalsign.tsr" || { echo 1 > "${FAIL_FLAG}"; echo "qsig: tsa: globalsign FAILED"; rm -f "${TSQ}"; exit 1; }
+    rm -f "${TSQ}"
+    echo "qsig: tsa: globalsign ok"
+) &
+PIDS="$PIDS $!"
+
+(
+    ALFA_USER=$(pass show "${ALFASIGN_PASS_USER:-qsig/alfasign/user}")
+    ALFA_PASS=$(pass show "${ALFASIGN_PASS_KEY:-qsig/alfasign/passwd}")
+    TSQ=$(mktemp)
+    openssl ts -query -data "${MANIFEST}" -sha256 -cert -out "${TSQ}"
+    OPENSSL_CONF=/dev/null curl -sf --tlsv1.2 --tls-max 1.2 -u "${ALFA_USER}:${ALFA_PASS}" \
+        -H "Content-Type: application/timestamp-query" --data-binary @"${TSQ}" \
+        "https://tsa.alfasign.ro/TSAServer/get.aspx" -o "${CHAIN_DIR}/alfasign.tsr" || { echo 1 > "${FAIL_FLAG}"; echo "qsig: tsa: alfasign FAILED"; rm -f "${TSQ}"; exit 1; }
+    rm -f "${TSQ}"
+    echo "qsig: tsa: alfasign ok"
+) &
+PIDS="$PIDS $!"
+
+for pid in ${PIDS}; do
+    wait "${pid}" || true
+done
+
+[ "$(cat "${FAIL_FLAG}")" = "0" ] || fail "one or more timestamps failed"
+rm -f "${FAIL_FLAG}"
+
+[ -f "${MANIFEST}.ots" ] || fail "manifest.txt.ots missing"
+echo "qsig: ots: bitcoin anchor submitted"
+
+[ -f "${CHAIN_DIR}/sectigo.tsr" ] || fail "sectigo.tsr missing"
+[ -f "${CHAIN_DIR}/digicert.tsr" ] || fail "digicert.tsr missing"
+[ -f "${CHAIN_DIR}/globalsign.tsr" ] || fail "globalsign.tsr missing"
+[ -f "${CHAIN_DIR}/alfasign.tsr" ] || fail "alfasign.tsr missing"
+echo "qsig: all timestamps verified"
+
+echo "qsig: ethereum l2 anchor (Base; chain: ${ETH_CHAIN_ID})"
+ETH_KEY=$(pass show "${ETH_PASS_KEY:-qsig/bchain/eth/secret}")
+ETH_ADDR=$(pass show "${ETH_PASS_ADDR:-qsig/bchain/eth/addr}")
+MANIFEST_HASH=$(sha256sum "${MANIFEST}" | cut -d' ' -f1)
+echo "qsig: manifest hash: ${MANIFEST_HASH}"
+echo "qsig: sending tx to ${ETH_ADDR}"
+TX_HASH=$(cast send --rpc-url "${ETH_RPC_URL}" \
+    --private-key "${ETH_KEY}" \
+    --chain "${ETH_CHAIN_ID}" \
+    "${ETH_ADDR}" \
+    "0x${MANIFEST_HASH}" 2>&1 | grep "transactionHash" | awk '{print $2}')
+
+[ -n "${TX_HASH}" ] || fail "ethereum tx failed"
+echo "qsig: tx: ${TX_HASH}"
+BLOCK=""
+for i in 1 2 3 4 5; do
+    sleep 2
+    BLOCK=$(cast receipt --rpc-url "${ETH_RPC_URL}" "${TX_HASH}" 2>&1 | grep "blockNumber" | awk '{print $2}')
+    [ -n "${BLOCK}" ] && break
+    echo "qsig: eth: waiting for confirmation (${i}/5)"
+done
+[ -n "${BLOCK}" ] || fail "ethereum receipt failed"
+echo "qsig: block: ${BLOCK}"
+cat > "${CHAIN_DIR}/eth-anchor.json" << EOF
+{
+    "tx_hash": "${TX_HASH}",
+    "block_number": ${BLOCK},
+    "chain_id": ${ETH_CHAIN_ID},
+    "rpc_url": "${ETH_RPC_URL}",
+    "manifest_sha256": "${MANIFEST_HASH}"
+}
+EOF
+echo "qsig: eth-anchor.json written"
+
+echo "qsig: creating asice container"
+ASICE="${CHAIN_DIR}/qsig.asice"
+OPENSSL_CONF=/dev/null digidoc-tool create --file="${MANIFEST}" --file="${CHAIN_DIR}/sectigo.tsr" --dontsign "${ASICE}"
+[ -f "${ASICE}" ] || fail "asice container creation failed"
+
+echo "qsig: eid signing"
+PKCS11_MOD="${EID_PKCS11_MODULE:-/usr/lib/opensc-pkcs11.so}"
+if [ "${SIGN_MODE}" = "smartid" ]; then
+    EID_READY=0
+elif [ "${SIGN_MODE}" = "id" ]; then
+    EID_READY=1
+else
+    EID_READY=0
+    while [ "${EID_READY}" = "0" ]; do
+        if pkcs11-tool --module "${PKCS11_MOD}" --list-slots 2>&1 | grep -q "token present"; then
+            EID_READY=1
+        else
+            echo "qsig: eID card not detected"
+            if [ ! -t 0 ] && ! sh -c 'exec 0</dev/tty' 2>/dev/null; then
+                echo "qsig: no tty; falling back to Smart-ID"
+                break
+            fi
+            printf "qsig: [r]etry / [s]mart-ID: "
+            read -r EID_CHOICE < /dev/tty
+            case "${EID_CHOICE}" in
+                s) break ;;
+                *) continue ;;
+            esac
+        fi
+    done
+fi
+
+if [ "${EID_READY}" = "1" ]; then
+    if [ -n "${EID_PIN}" ]; then
+        OPENSSL_CONF=/dev/null digidoc-tool sign --pkcs11 --pin="${EID_PIN}" "${ASICE}" || fail "pkcs11 signing failed"
+    else
+        OPENSSL_CONF=/dev/null digidoc-tool sign --pkcs11 "${ASICE}" || fail "pkcs11 signing failed"
+    fi
+    echo "qsig: eid: signed via pkcs11"
+else
+    OPENSSL_CONF=/dev/null qdigidoc4 "${ASICE}"
+    echo "qsig: eid: signed via Smart-ID"
+fi
+
+echo "qsig: verifying package"
+[ -f "${MANIFEST}" ] || fail "manifest.txt missing"
+[ -f "${MANIFEST}.ots" ] || fail "manifest.txt.ots missing"
+[ -f "${CHAIN_DIR}/sectigo.tsr" ] || fail "sectigo.tsr missing"
+[ -f "${CHAIN_DIR}/digicert.tsr" ] || fail "digicert.tsr missing"
+[ -f "${CHAIN_DIR}/globalsign.tsr" ] || fail "globalsign.tsr missing"
+[ -f "${CHAIN_DIR}/alfasign.tsr" ] || fail "alfasign.tsr missing"
+[ -f "${CHAIN_DIR}/eth-anchor.json" ] || fail "eth-anchor.json missing"
+[ -f "${ASICE}" ] || fail "qsig.asice missing"
+echo "qsig: package complete"
+
+echo "qsig: committing chain"
+touch "${LOCK}"
+git add "${CHAIN_DIR}"
+git commit --no-verify -m "qsig: ${SHORT}"
+rm -f "${LOCK}"
+
+echo "qsig: done (${SHORT})"

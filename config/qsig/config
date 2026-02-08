@@ -1,0 +1,10 @@
+EID_PKCS11_MODULE=/usr/lib/opensc-pkcs11.so
+EID_PIN=
+
+ETH_RPC_URL=https://mainnet.base.org
+ETH_CHAIN_ID=8453
+ETH_PASS_ADDR=qsig/bchain/eth/addr
+ETH_PASS_KEY=qsig/bchain/eth/secret
+
+ALFASIGN_PASS_USER=qsig/alfasign/user
+ALFASIGN_PASS_KEY=qsig/alfasign/passwd

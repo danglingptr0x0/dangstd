@@ -10,6 +10,7 @@ COMMIT_SOURCE="$2"
 [[ -f "$(git rev-parse --git-dir)/MERGE_HEAD" ]] && exit 0
 
 CURRENT_MSG=$(cat "$COMMIT_MSG_FILE")
+[[ "$CURRENT_MSG" =~ "^qsig: " ]] && exit 0
 [[ "$CURRENT_MSG" =~ "^(feat|fix|hot|rel|misc|docs|refactor|test|chore|perf|ci|build|revert)\\(" ]] && exit 0
 
 BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
