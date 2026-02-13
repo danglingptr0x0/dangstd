@@ -7,7 +7,7 @@ set(QEMU_TEST_DEFAULT_TIMEOUT "120" CACHE STRING "")
 
 function(qemu_add_test)
     set(options DKMS)
-    set(oneValueArgs NAME COMMAND ARCH VARIANT TIMEOUT KERNEL_MODULE MODULE_NAME)
+    set(oneValueArgs NAME COMMAND ARCH VARIANT TIMEOUT KERNEL_MODULE MODULE_NAME DATA_DIR)
     cmake_parse_arguments(QAT "${options}" "${oneValueArgs}" "" ${ARGN})
 
     if(NOT QAT_ARCH)
@@ -32,6 +32,10 @@ function(qemu_add_test)
 
     if(QAT_DKMS AND QAT_KERNEL_MODULE)
         list(APPEND _args --kernel-module ${QAT_KERNEL_MODULE} --module-name ${QAT_MODULE_NAME})
+    endif()
+
+    if(QAT_DATA_DIR)
+        list(APPEND _args --data-dir ${QAT_DATA_DIR})
     endif()
 
     add_test(
@@ -90,7 +94,7 @@ function(qemu_add_run_target)
         COMMAND genhtml ${CMAKE_BINARY_DIR}/coverage.info --output-directory ${QRT_COVERAGE_DIR} --quiet
         COMMAND git -C ${CMAKE_SOURCE_DIR} test-state save || true
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMENT "Running all tests in QEMU, generating coverage"
+        COMMENT "run all tests in QEMU; gen cov"
         VERBATIM
     )
 endfunction()

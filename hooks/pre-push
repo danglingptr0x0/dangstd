@@ -62,7 +62,7 @@ while read local_ref local_sha remote_ref remote_sha; do
 
         for commit in $commits; do
             msg=$(git log -1 --format=%s "$commit")
-            if [[ "$msg" =~ ^Merge ]]; then
+            if [[ "$msg" =~ ^Merge || "$msg" =~ ^qsig: ]]; then
                 continue
             fi
             if [[ ! "$msg" =~ $COMMIT_MSG_PATTERN ]]; then

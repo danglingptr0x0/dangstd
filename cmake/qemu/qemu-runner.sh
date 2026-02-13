@@ -9,6 +9,7 @@ MODULE_NAME=""
 DKMS=0
 GCOV_DIR=""
 BUILD_DIR=""
+DATA_DIR=""
 TIMEOUT=120
 SSH_USER="root"
 SSH_KEY="${HOME}/.ssh/id_qemu_test"
@@ -27,6 +28,7 @@ while [ $# -gt 0 ]; do
         --module-name) MODULE_NAME="$2"; shift 2 ;;
         --gcov-dir) GCOV_DIR="$2"; shift 2 ;;
         --build-dir) BUILD_DIR="$2"; shift 2 ;;
+        --data-dir) DATA_DIR="$2"; shift 2 ;;
         --timeout) TIMEOUT="$2"; shift 2 ;;
         *) echo "unknown option: $1"; exit 1 ;;
     esac
@@ -69,6 +71,11 @@ REMOTE_DIR="/tmp/qemu-test-$$"
 ssh $SSH_OPTS "${SSH_USER}@${VM_IP}" "mkdir -p ${REMOTE_DIR}/gcda"
 
 scp $SSH_OPTS "$BINARY" "${SSH_USER}@${VM_IP}:${REMOTE_DIR}/test_binary"
+
+if [ -n "$DATA_DIR" ] && [ -d "$DATA_DIR" ]; then
+    ssh $SSH_OPTS "${SSH_USER}@${VM_IP}" "mkdir -p ${REMOTE_DIR}/tests"
+    scp -r $SSH_OPTS "$DATA_DIR" "${SSH_USER}@${VM_IP}:${REMOTE_DIR}/tests/"
+fi
 
 if [ "$DKMS" -eq 1 ] && [ -n "$KERNEL_MODULE" ]; then
     if [ ! -f "$KERNEL_MODULE" ]; then

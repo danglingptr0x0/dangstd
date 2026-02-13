@@ -1,12 +1,21 @@
 // ldg_mem_alloc without ldg_mem_dealloc on error path
 @ldg_alloc_no_dealloc@
+identifier I;
+expression RC;
+type T;
 expression E;
 position p;
 @@
-  E = ldg_mem_alloc(...)
-  ... when != !E
-      when != E == NULL
-      when != ldg_mem_dealloc(E)
+(
+  RC = ldg_mem_alloc(..., (void **)&I)
+|
+  RC = ldg_mem_alloc(..., &I)
+)
+  ... when != ldg_mem_dealloc(I)
+      when != ldg_mem_dealloc((void *)I)
+      when != RC != LDG_ERR_AOK
+      when != E = I
+      when != E = (T)I
 * return@p ...;
 
 // socket without close

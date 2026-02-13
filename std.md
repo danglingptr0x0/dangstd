@@ -1,6 +1,6 @@
 ```
-Ongakken Corporation OU                                                OC Std 2.0
-Kalaranna tn 8/2-30, 10415                                       (Revision of 1.9)
+Ongakken Corporation OU                                                OC Std 2.5
+Kalaranna tn 8/2-30, 10415                                       (Revision of 2.4)
 Tallinn, Harju maakond
 Estonia
 Registry code: 17168301
@@ -72,9 +72,9 @@ Software Development -- Build Systems, Code Style, and Tooling
 
 ## 1. Scope
 
-1 Requirements for software development across all repositories; project-local standards may override specific provisions.
-2 Covers version control, code style, build systems, and libdangling usage.
-3 Extends and overrides ISO/IEC 9899:1999 (C99) and IEEE Std 1003.1-2017 (POSIX.1-2017) where applicable.
+1 This standard specifies requirements for software development across all repositories. Project-local standards may override specific provisions.
+2 This standard covers version control, code style, build systems, and libdangling usage.
+3 This standard extends and overrides ISO/IEC 9899:1999 (C99) and IEEE Std 1003.1-2017 (POSIX.1-2017) where applicable.
 
 ## 2. Conformance
 
@@ -102,8 +102,7 @@ Priority levels (descending severity): **BLUE** (security-critical, maximum) > *
 
 ## 4. libdangling
 
-Canonical utility library for all C projects; shall be used for all utilities it provides; redefinition prohibited.
-Install: `pkg-config --cflags --libs dangling` | Source: `~/git/libdangling`
+libdangling is the canonical utility library for all C projects. It shall be used for all utilities it provides; redefinition of its facilities is prohibited. Installation shall be verified via `pkg-config --cflags --libs dangling`. The source resides at `~/git/libdangling`.
 
 ### 4.1 Macros (`core/macros.h`, `core/bits.h`)
 
@@ -111,7 +110,7 @@ Branch hints: `LDG_LIKELY()`, `LDG_UNLIKELY()` | Sizes: `LDG_KIB/MIB/GIB` | Time
 
 ### 4.2 Error Codes (`core/err.h`)
 
-Reserved range 0-690. Project-specific: 700-990. Generic conditions shall use libdangling codes.
+Error codes 0 through 690 are reserved for libdangling. Project-specific codes shall use the range 700 through 990. Generic conditions shall use libdangling error codes.
 
 | Range | Category |
 |-------|----------|
@@ -133,8 +132,10 @@ Logging: `LDG_ERRLOG_ERR()`, `LDG_ERRLOG_WARN()`, `LDG_ERRLOG_INFO()`
 
 ### 4.4 Memory (`mem/`)
 
-`mem.h`: `ldg_mem_init/shutdown/alloc/realloc/dealloc()`, `ldg_mem_stats_get/leaks_dump/valid_is/size_get()`
-`alloc.h`: `ldg_mem_pool_create/destroy/alloc/dealloc()`
+All runtime allocation shall use pools (§7.4-5). Two pool modes: fixed-size (`item_size` > 0) for uniform objects with individual dealloc; variable-size (`item_size` == 0) as bump allocator for heterogeneous allocations with bulk-only dealloc via `ldg_mem_pool_reset()`.
+
+`mem.h`: `ldg_mem_init/shutdown()`, `ldg_mem_alloc(size, &out)/realloc(ptr, size, &out)/dealloc(ptr)`, `ldg_mem_lock/locked_is()`, `ldg_mem_stats_get/leaks_dump/valid_is/size_get()`
+`alloc.h`: `ldg_mem_pool_create(item_size, capacity, &out)/destroy/alloc(pool, size, &out)/dealloc/reset()`, `ldg_mem_pool_remaining_get/used_get/capacity_get/var_is()`
 `secure.h`: `ldg_mem_secure_zero/copy/cmp/cmov/neq()`
 
 ### 4.5 String (`str/str.h`)
@@ -198,11 +199,11 @@ Location: `~/.config/git/hooks/` via `git config --global core.hooksPath`.
 
 ### 5.2 Scripts
 
-Location: `~/.config/git/bin/` (on PATH). `git bump` = next semver; `git bump --apply` = git flow release; `git release-notes` = changelog via git-cliff.
+Scripts are located at `~/.config/git/bin/` (on PATH). The `git bump` command shall produce the next semantic version. The `git bump --apply` command shall execute a git flow release. The `git release-notes` command shall generate a changelog via git-cliff.
 
 ### 5.3 Coccinelle
 
-Location: `~/.config/git/cocci/`. Run: `run-all.sh /path/to/src` (report) or `run-all.sh /path/to/src --fix` (apply).
+Coccinelle semantic patches are located at `~/.config/git/cocci/`. The tool shall be invoked as `run-all.sh /path/to/src` for reporting, or `run-all.sh /path/to/src --fix` for applying patches.
 
 ### 5.4 Branch Naming
 
@@ -220,9 +221,9 @@ One subsystem per commit (directory path + base filename). Scope shall match sub
 
 A minimum of 50% coverage shall be achieved before committing. Commands: `git test-state save/check`. Targets: `make tests` (build only), `make tests-run` (build + QEMU run + coverage + test-state save).
 
-Pre-commit hook: checks `.test-state` hash -> runs `make tests-run` if invalid -> verifies 50% coverage -> saves state -> blocks on failure.
+The pre-commit hook shall check the `.test-state` hash. If the hash is invalid, the hook shall run `make tests-run`, verify that 50% coverage is achieved, and save the resulting state. The hook shall block the commit on failure.
 
-`std_invalidate_test_state(main_target)` handles recompilation invalidation. Coverage via `std.cmake` with `STD_DEBUG=ON`. `.test-state` globally gitignored. Reports in `build/coverage_html/`.
+The `std_invalidate_test_state(main_target)` function shall handle recompilation invalidation. Coverage shall be enabled via `std.cmake` with `STD_DEBUG=ON`. The `.test-state` file shall be globally gitignored. Reports shall be generated in `build/coverage_html/`.
 
 ### 5.8 Git Invocation
 
@@ -267,7 +268,7 @@ list(APPEND CMAKE_MODULE_PATH "$ENV{HOME}/.config/cmake")
 include(std)
 ```
 
-`std.cmake` enforces: C99 (`CMAKE_C_STANDARD 99`, `CMAKE_C_EXTENSIONS OFF`), POSIX.1-2008, `-pedantic -Werror=pedantic`, debug via `-DSTD_DEBUG=ON` (`-g -O0` + coverage). External deps use `SYSTEM` includes.
+`std.cmake` shall enforce C99 (`CMAKE_C_STANDARD 99`, `CMAKE_C_EXTENSIONS OFF`), POSIX.1-2008, and the flags `-pedantic -Werror=pedantic`. Debug mode shall be enabled via `-DSTD_DEBUG=ON` (`-g -O0` + coverage). External dependencies shall use `SYSTEM` includes.
 
 Test registration:
 ```cmake
@@ -280,30 +281,30 @@ qemu_add_run_target()
 
 `qemu_add_test()` parameters: NAME (required), COMMAND (required), ARCH (x86_64), VARIANT (dev), TIMEOUT (120), DKMS (off), KERNEL_MODULE.
 
-Targets: `make run-<name>` (single test), `make tests-run` (full suite `-j 12` + lcov + genhtml + test-state save).
+The `make run-<name>` target shall execute a single test. The `make tests-run` target shall execute the full suite (`-j 12`) and shall invoke `lcov`, `genhtml`, and test-state save.
 
 #### 5.10.4 Execution Flow
 
-1. CTest -> `qemu-runner.sh` per binary (`-j 12`)
-2. Resolve VM IP (`virsh domifaddr`), verify running
-3. `scp` binary to VM (`/tmp/qemu-test-$$/test_binary`)
-4. `ssh` execute with `GCOV_PREFIX`/`GCOV_PREFIX_STRIP`
-5. Extract `.gcda` via `tar` over SSH, clean up, exit with test exit code
-6. After all: `lcov --capture` + `genhtml`
+1. CTest shall invoke `qemu-runner.sh` per binary (`-j 12`).
+2. The runner shall resolve the VM IP via `virsh domifaddr` and verify the VM is running.
+3. The test binary shall be copied to the VM via `scp` (`/tmp/qemu-test-$$/test_binary`).
+4. The binary shall be executed over `ssh` with `GCOV_PREFIX` and `GCOV_PREFIX_STRIP` set.
+5. Coverage data (`.gcda`) shall be extracted via `tar` over SSH; temporary files shall be removed; the runner shall exit with the test exit code.
+6. After all tests complete, `lcov --capture` and `genhtml` shall be invoked.
 
-SSH uses connection multiplexing (`ControlMaster=auto`, `ControlPersist=30`).
+SSH shall use connection multiplexing (`ControlMaster=auto`, `ControlPersist=30`).
 
 #### 5.10.5 DKMS Testing
 
-DKMS flag: copy `.ko` -> `insmod` -> run test -> capture `dmesg` -> `rmmod`. VM runs host kernel for ABI compat.
+When the DKMS flag is set, the kernel module (`.ko`) shall be copied to the VM, loaded via `insmod`, the test shall be executed, `dmesg` output shall be captured, and the module shall be removed via `rmmod`. The VM shall run the host kernel to ensure ABI compatibility.
 
 #### 5.10.6 Cross-Compilation
 
-Toolchain files `QEMUToolchain-{arch}.cmake` set cross-compiler + `-static`. Architectures: i386, x86_64, aarch64, riscv64.
+Toolchain files `QEMUToolchain-{arch}.cmake` shall set the cross-compiler and the `-static` flag. Supported architectures are i386, x86_64, aarch64, and riscv64.
 
 #### 5.10.7 Infrastructure
 
-All in `~/git/dangstd/cmake/`, symlinked to `~/.config/cmake/`: `std.cmake`, `QEMUTest.cmake`, `QEMUToolchain-{arch}.cmake`, `qemu/qemu-runner.sh`, `qemu/create-vm.sh`.
+All infrastructure files reside in `~/git/dangstd/cmake/` and shall be symlinked to `~/.config/cmake/`: `std.cmake`, `QEMUTest.cmake`, `QEMUToolchain-{arch}.cmake`, `qemu/qemu-runner.sh`, and `qemu/create-vm.sh`.
 
 #### 5.10.8 Test Protocol
 
@@ -320,19 +321,22 @@ All in `~/git/dangstd/cmake/`, symlinked to `~/.config/cmake/`: `std.cmake`, `QE
 
 ## 6. Project Planning
 
-Prior to implementation, all decision points shall be identified; architecture, API design, data flow, and trade-offs shall be clarified. Implementation shall not proceed until confirmed.
+Prior to implementation, all decision points shall be identified. Architecture, API design, data flow, and trade-offs shall be clarified. Implementation shall not proceed until all decision points have been confirmed.
 
 ## 7. Implementation Rules
 
-1. Stubs shall not be used; only full implementations are permitted (stubs pollute symbol tables)
-2. Existing logic shall be modified incrementally
-3. Zero-based indexing shall be used; translation shall occur at boundary if external dependencies use one-based
+1. Stubs shall not be used; only full implementations shall be permitted. Stubs pollute symbol tables.
+2. Existing logic shall be modified incrementally.
+3. Zero-based indexing shall be used. Translation shall occur at the boundary if external dependencies use one-based indexing.
+4. Heap allocation (`ldg_mem_alloc`/`ldg_mem_realloc`, `malloc`/`calloc`/`realloc`) shall not be used after initialization; only `*_init` and `*_create` functions may heap-allocate. `ldg_mem_lock()` shall be called after initialization; heap allocation after the lock shall fail.
+5. All post-initialization allocation shall use `ldg_mem_pool_alloc`. Fixed-size pools (`item_size` > 0) shall be used for uniform objects. Variable-size pools (`item_size` == 0) shall be used for heterogeneous allocations with shared lifetime. `ldg_mem_pool_reset()` shall be used for bulk deallocation of variable-size pools.
 
 ---
 
 ## 8. Code Exploration
 
-AST tools shall be used before reading C source:
+AST tools shall be used before reading C source. The following invocations are representative:
+
 ```bash
 ctags -x --c-kinds=f file.c                    # functions
 ctags -x --c-kinds=st file.c                   # structs/typedefs
@@ -377,12 +381,13 @@ ast-grep run --pattern 'typedef struct $NAME { $$$BODY }' --lang c file.c
 1. Global and file-scope static variables shall not be used; forward declarations shall not be used
 2. Backend abstraction: generic struct shall use `void *ctx_name`; backends cast to own type
 3. Struct padding shall use `uint8_t pudding[N]`; cache-aligned: `__attribute__((aligned(64)))`
-4. Only unsigned types shall be used: `uint8/16/32/64_t`, `uintptr_t`; signed casts shall occur only at external API boundaries
+4. Only unsigned fixed-width types shall be used: `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`, `uintptr_t`. Ambiguous-width types (`size_t`, `ssize_t`, `unsigned int`, `unsigned long`) shall not be used. Signed types from external APIs shall be cast to the appropriate fixed-width unsigned type at the boundary
 5. Sentinel values shall be `UINT*_MAX`; index initialization shall be `UINT*_MAX`; null shall be `0x0`
+6. Boolean values shall be `uint8_t` (0 or 1). `_Bool`, `bool`, and `stdbool.h` shall not be used
 
 ### 10.4 Error Handling
 
-Functions shall return `uint32_t` with `*_ERR_*` codes. `UNLIKELY()` shall wrap error paths. Guard clauses shall appear at function start with early return. `goto` and labels shall not be used; explicit cleanup per path is required. Warning-suppression pragmas shall not be used.
+Functions shall return `uint32_t` with `*_ERR_*` codes. Functions shall not return pointers or computed values directly; output shall be written through caller-provided pointer parameters (e.g., `uint32_t ldg_mem_alloc(uint64_t size, void **out)`). Getter functions returning scalar query results (e.g., `_size_get`, `_remaining_get`) may return the value directly as `uint64_t`, with `UINT*_MAX` as the error sentinel per §10.3.5. Predicate functions (`_is`, `_has`) shall return `uint8_t` (0 or 1) per §10.3.6. `UNLIKELY()` shall wrap error paths. Guard clauses shall appear at function start with early return; output parameters shall be set to `0x0` or `0` immediately after the null guard. `goto` and labels shall not be used; explicit cleanup per path is required. Warning-suppression pragmas shall not be used.
 
 ### 10.5 Comments
 
@@ -395,13 +400,13 @@ Colons shall separate key-value pairs: `"key: %u"`. Semicolons shall separate va
 ### 10.7 Includes and Headers
 
 Standard includes shall precede project includes. Guards shall use: `#ifndef MODULE_H` / `#define MODULE_H` / `#endif`.
-Core headers shall include only `<stdint.h>`, `<stddef.h>`, and engine headers. Third-party includes shall not appear in `.h` files. Backend handles shall be `void*` in headers, cast in `.c`. Wrapper functions shall not be used.
+Core headers shall include only `<stdint.h>` and engine headers. Third-party includes shall not appear in `.h` files. Backend handles shall be `void*` in headers, cast in `.c`. Wrapper functions shall not be used.
 
 ---
 
 ## 11. Required Abbreviations
 
-Full words shall be avoided in identifiers.
+Full words shall not be used in identifiers where an abbreviation is defined below.
 
 **Core:** `sys=system init=initialize ctx=context conf=config desc=descriptor func=function cb=callback attr=attribute dev=device fmt=format idx=index val=value ptr=pointer ret=return err=error src=source dst=destination len=length buff=buffer addr=address alloc=allocation dealloc=deallocation cunt=count cuntr=counter pudding=padding op=operator/operand lhs=left rhs=right decl=declaration def=definition ref=reference`
 
@@ -421,13 +426,13 @@ Full words shall be avoided in identifiers.
 
 **Domain:** `sched=scheduler strat=strategy proj=project cplx=complexity pform=platform econ=economy lboard=leaderboard wshop=workshop enc=encrypt dec=decrypt sess=session sub=subscription`
 
-**Prohibited:** `buf` (buff), `count` (cunt), `padding` (pudding), `float` (double), `int/short/long` (uint*_t)
+**Prohibited:** `buf` (buff), `count` (cunt), `padding` (pudding), `float` (double), `int/short/long` (uint*_t), `size_t` (uint64_t), `ssize_t` (int64_t at boundaries), `unsigned int/long` (uint32/64_t)
 
 ---
 
 ## 12. Vale
 
-Config: `~/.config/vale/`. Styles: Microsoft, write-good, proselint, alex. Run: `vale file.md`.
+The Vale configuration is located at `~/.config/vale/`. The following styles shall be enabled: Microsoft, write-good, proselint, and alex. The tool shall be invoked as `vale file.md`.
 
 ---
 
@@ -435,7 +440,7 @@ Config: `~/.config/vale/`. Styles: Microsoft, write-good, proselint, alex. Run: 
 
 ### 13.1 Applicability
 
-Applies to repos with `.mainproj`. `post-commit` hook invokes `qsig`; not bypassed by `--no-verify`. Hook shall not be disabled.
+This section applies to repositories containing a `.mainproj` file. The `post-commit` hook shall invoke `qsig`; this invocation shall not be bypassed by `--no-verify`. The hook shall not be disabled.
 
 ### 13.2 Package Contents
 
@@ -454,7 +459,7 @@ Each commit produces `.chain/{commit-short}/`:
 
 ### 13.3 Timestamping
 
-Parallel RFC 3161 queries per commit:
+RFC 3161 timestamp queries shall be issued in parallel for each commit:
 
 | TSA | Endpoint | Auth |
 |-----|----------|------|
@@ -463,11 +468,11 @@ Parallel RFC 3161 queries per commit:
 | GlobalSign | `http://timestamp.globalsign.com/tsa/r6advanced1` | None |
 | Alfasign | `https://tsa.alfasign.ro/TSAServer/get.aspx` | HTTP Basic via `pass` |
 
-Alfasign creds in `pass` (`ALFASIGN_PASS_USER`, `ALFASIGN_PASS_KEY`). OTS (`ots stamp`) provides Bitcoin anchoring; `.ots` created immediately, confirmation async.
+Alfasign credentials shall be stored in `pass` (`ALFASIGN_PASS_USER`, `ALFASIGN_PASS_KEY`). OpenTimestamps (`ots stamp`) shall provide Bitcoin anchoring; the `.ots` file shall be created immediately, with confirmation occurring asynchronously.
 
 ### 13.4 Blockchain Anchoring
 
-Ethereum L2 via `cast send` (Foundry). Manifest SHA-256 as calldata, zero-value tx to sender's own address. Key/addr in `pass` (`ETH_PASS_KEY`, `ETH_PASS_ADDR`). RPC/chain in config (`ETH_RPC_URL`, `ETH_CHAIN_ID`).
+Blockchain anchoring shall use Ethereum L2 via `cast send` (Foundry). The manifest SHA-256 shall be sent as calldata in a zero-value transaction to the sender's own address. The private key and address shall be stored in `pass` (`ETH_PASS_KEY`, `ETH_PASS_ADDR`). The RPC endpoint and chain identifier shall be specified in the configuration (`ETH_RPC_URL`, `ETH_CHAIN_ID`).
 
 ### 13.5 Electronic Signature
 
@@ -475,11 +480,11 @@ Every package shall be signed with eID. Default: PKCS#11 via card (`digidoc-tool
 
 ### 13.6 Chain Commits
 
-`qsig` stages `.chain/{short}/`, commits `qsig: {short}` with `--no-verify`. Lock file `${GIT_DIR}/.qsig-lock` prevents recursion: hook exits if present; qsig creates before commit, removes after.
+The `qsig` tool shall stage `.chain/{short}/` and commit with the message `qsig: {short}` using `--no-verify`. A lock file (`${GIT_DIR}/.qsig-lock`) shall prevent recursion: the hook shall exit if the lock file is present. The `qsig` tool shall create the lock file before the commit and remove it after.
 
 ### 13.7 GitHub Enforcement
 
-`.mainproj` repos include `qsig-verify.yml` at `.github/workflows/`. Required status check on `main`/`staging`. Verifies per non-chain commit: `.chain/{short}/` exists, `manifest.txt` hash matches, at least one `.tsr`, `eth-anchor.json`, `qsig.asice`. Commits prefixed `qsig:` excluded. Failures reject push/PR.
+Repositories containing `.mainproj` shall include `qsig-verify.yml` at `.github/workflows/`. This workflow shall be configured as a required status check on the `main` and `staging` branches. For each non-chain commit, the workflow shall verify that `.chain/{short}/` exists, that the `manifest.txt` hash matches, and that at least one `.tsr`, `eth-anchor.json`, and `qsig.asice` are present. Commits prefixed with `qsig:` shall be excluded from verification. Failures shall reject the push or pull request.
 
 ### 13.8 Infrastructure
 
@@ -490,23 +495,19 @@ Every package shall be signed with eID. Default: PKCS#11 via card (`digidoc-tool
 | `~/git/dangstd/hooks/post-commit` | Invokes qsig after branchless hook |
 | `~/git/dangstd/workflows/qsig-verify.yml` | GitHub Actions workflow |
 
-Symlinks: `~/bin/qsig` -> dangstd; `~/.config/qsig` -> dangstd.
+Symlinks shall be created: `~/bin/qsig` shall point to dangstd; `~/.config/qsig` shall point to dangstd.
 
 ### 13.9 Credentials
 
-All in `pass`: `qsig/alfasign/user`, `qsig/alfasign/passwd`, `qsig/bchain/eth/addr`, `qsig/bchain/eth/secret`. Paths configurable via config.
+All credentials shall be stored in `pass`: `qsig/alfasign/user`, `qsig/alfasign/passwd`, `qsig/bchain/eth/addr`, `qsig/bchain/eth/secret`. Paths shall be configurable via the configuration file.
 
 ### 13.10 Verification
 
-OTS: `ots verify .chain/{short}/manifest.txt.ots`
-RFC 3161: `openssl ts -verify -in {tsa}.tsr -data manifest.txt -CAfile <ca-cert>`
-eID: `digidoc-tool open .chain/{short}/qsig.asice`
-Manifest: `git show {commit}:{file} | sha256sum` vs manifest entry
-Ethereum: verify tx on block explorer via `eth-anchor.json`
+OpenTimestamps shall be verified via `ots verify .chain/{short}/manifest.txt.ots`. RFC 3161 timestamps shall be verified via `openssl ts -verify -in {tsa}.tsr -data manifest.txt -CAfile <ca-cert>`. The eID signature shall be verified via `digidoc-tool open .chain/{short}/qsig.asice`. Manifest integrity shall be verified by comparing `git show {commit}:{file} | sha256sum` against the manifest entry. The Ethereum anchor shall be verified on a block explorer via `eth-anchor.json`.
 
 ### 13.11 Retention
 
-`.chain/` shall not be removed from repo or history. Files shall not be modified after creation.
+The `.chain/` directory shall not be removed from the repository or its history. Files within `.chain/` shall not be modified after creation.
 
 ---
 
@@ -522,7 +523,7 @@ All SSH connections shall use PQ-authenticated tunnel wrapping. Naked SSH shall 
 SSH (PQ KEX) --> Kryphos (ML-DSA + ML-KEM + ChaCha20-Poly1305) --> TLS 1.3 (ML-DSA mTLS) --> Network
 ```
 
-Phase 1: outer TLS 1.3. Phase 2: Kryphos middle layer. Both use ML-DSA-87. SSH negotiates PQ KEX (`sntrup761x25519-sha512@openssh.com`, `mlkem768x25519-sha256`), targets `127.0.0.1`. Server `sshd` binds `127.0.0.1` only; port 22 not exposed.
+Phase 1 shall be the outer TLS 1.3 tunnel. Phase 2 shall be the Kryphos middle layer. Both phases shall use ML-DSA-87. SSH shall negotiate PQ KEX (`sntrup761x25519-sha512@openssh.com`, `mlkem768x25519-sha256`) and shall target `127.0.0.1`. The server `sshd` shall bind to `127.0.0.1` only; port 22 shall not be exposed.
 
 ### 14.3 Cryptographic Parameters
 
@@ -539,7 +540,7 @@ NIST P-curves shall not be used. SHA-2 shall not be used (except TLS 1.3 PRF, wh
 
 ### 14.4 Certificate Chain
 
-Self-signed ML-DSA-87 CA issues server and client certs (ML-DSA-87).
+A self-signed ML-DSA-87 CA shall issue server and client certificates (ML-DSA-87).
 
 Subject DN: `O=Ongakken Corporation OU, serialNumber=17168301, L=Tallinn, ST=Harju maakond, C=EE, street=Kalaranna tn 8/2-30, 10415`
 
@@ -549,28 +550,27 @@ Subject DN: `O=Ongakken Corporation OU, serialNumber=17168301, L=Tallinn, ST=Har
 | Server | `{fqdn}` | 365d | Digital Sig, Key Encipher |
 | Client | `{full_name}` (+emailAddress) | 365d | Digital Sig, Key Encipher |
 
-Keys/certs in `pass`: `pqtun/ca/key|cert`, `pqtun/server/{host}/key|cert`, `pqtun/client/{host}/key|cert`. Scripts extract from `pass` at runtime. Deploy: `pqtun deploy {hostname}` -> `/etc/pqtun/`.
+Keys and certificates shall be stored in `pass`: `pqtun/ca/key|cert`, `pqtun/server/{host}/key|cert`, `pqtun/client/{host}/key|cert`. Scripts shall extract credentials from `pass` at runtime. Deployment shall be performed via `pqtun deploy {hostname}`, which shall install credentials to `/etc/pqtun/`.
 
 ### 14.5 TLS Tunnel
 
-`stunnel` or equivalent (OpenSSL 3.6+).
+The TLS tunnel shall use `stunnel` or an equivalent tool (OpenSSL 3.6+).
 
-**Server:** listen 2222 (`PQTUN_PORT`), forward `127.0.0.1:22`, TLSv1.3 only, mTLS (verify=2), certs at `/etc/pqtun/`.
-**Client:** listen `127.0.0.1:{local_port}`, connect `{server}:2222`, TLSv1.3 only, verify=2, certs at `~/.config/pqtun/`.
-**SSH:** `HostName 127.0.0.1, Port {local_port}, ProxyCommand none`.
+**Server:** The server shall listen on port 2222 (`PQTUN_PORT`) and forward to `127.0.0.1:22`. Only TLSv1.3 shall be permitted. Mutual TLS shall be required (verify=2). Certificates shall reside at `/etc/pqtun/`.
+**Client:** The client shall listen on `127.0.0.1:{local_port}` and connect to `{server}:2222`. Only TLSv1.3 shall be permitted; verify=2. Certificates shall reside at `~/.config/pqtun/`.
+**SSH:** The SSH configuration shall specify `HostName 127.0.0.1`, `Port {local_port}`, and `ProxyCommand none`.
 
 ### 14.6 Server Lockdown
 
-After the tunnel is verified: `sshd ListenAddress 127.0.0.1`, firewall shall block port 22. Only PQTUN_PORT shall be externally accessible. Lockdown shall not proceed until the tunnel is verified.
+After the tunnel has been verified, `sshd` shall be configured with `ListenAddress 127.0.0.1` and the firewall shall block port 22. Only `PQTUN_PORT` shall be externally accessible. Lockdown shall not proceed until the tunnel has been verified.
 
 ### 14.7 Infrastructure
 
-`~/git/dangstd/bin/pqtun` (manage), `~/git/dangstd/bin/pqtun-certgen` (certs), `~/git/dangstd/config/pqtun/` (config + templates).
-Symlinks: `~/bin/pqtun|pqtun-certgen` -> dangstd; `~/.config/pqtun` -> dangstd.
+The tunnel management tool resides at `~/git/dangstd/bin/pqtun`. The certificate generation tool resides at `~/git/dangstd/bin/pqtun-certgen`. Configuration and templates reside at `~/git/dangstd/config/pqtun/`. Symlinks shall be created: `~/bin/pqtun` and `~/bin/pqtun-certgen` shall point to dangstd; `~/.config/pqtun` shall point to dangstd.
 
 ### 14.8 Credentials
 
-All in `pass` (§14.4). Deploy extracts to `/etc/pqtun/` (keys 0600, certs 0644). Client startup extracts to tmpdir, erases on shutdown.
+All credentials shall be stored in `pass` (§14.4). The deploy operation shall extract credentials to `/etc/pqtun/` (keys with mode 0600, certificates with mode 0644). The client shall extract credentials to a temporary directory at startup and shall erase them on shutdown.
 
 ### 14.9 Renewal
 
@@ -578,7 +578,7 @@ Server and client certificates shall be renewed before expiry: `pqtun-certgen re
 
 ### 14.10 Verification
 
-`pqtun status {host}` = TLS + cert + SSH check. `openssl verify -CAfile ca.pem server.pem` = chain. `openssl x509 -in server.pem -text -noout` = confirm ML-DSA-87.
+Tunnel status shall be verified via `pqtun status {host}`, which shall check TLS, certificate, and SSH connectivity. The certificate chain shall be verified via `openssl verify -CAfile ca.pem server.pem`. The ML-DSA-87 algorithm shall be confirmed via `openssl x509 -in server.pem -text -noout`.
 
 ---
 
@@ -665,3 +665,8 @@ The payload may contain byte sequences identical to the start or end markers. Th
 | 1.8 | 2026-02-07 | §13 Qualified Signatures |
 | 1.9 | 2026-02-07 | §14 Post-Quantum Tunnel |
 | 2.0 | 2026-02-08 | §4.12 Protocol module; §15 EMIRU Binary Format; §16 EMIEMI Transfer Protocol; §4.2 error code range update |
+| 2.1 | 2026-02-10 | §4.4 pool API update (variable-size, reset, query); §7.4 post-init allocation discipline; `ldg_mem_lock` |
+| 2.2 | 2026-02-10 | §10.3.4 explicit `size_t`/`ssize_t`/`unsigned int/long` prohibition; §11 prohibited list updated |
+| 2.3 | 2026-02-10 | §10.4 pointer return prohibition; out-param mandate; getter scalar exception with `UINT*_MAX` sentinel; §4.4 mem API signatures updated |
+| 2.4 | 2026-02-10 | Prose standardization: fragment sentences replaced with complete "shall" sentences per ISO/IEC 9899 and IEEE Std 1003.1 conventions; arrow notation and equals-sign definitions eliminated; missing articles and verbs added throughout §§1, 5, 6, 7, 8, 9, 11, 12, 13, 14 |
+| 2.5 | 2026-02-10 | §10.3.6 boolean values shall be `uint8_t`; §10.4 predicate functions (`_is`, `_has`) shall return `uint8_t` |
