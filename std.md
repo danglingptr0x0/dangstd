@@ -102,7 +102,7 @@ Priority levels (descending severity): **BLUE** (security-critical, maximum) > *
 
 ## 4. libdangling
 
-libdangling is the canonical utility library for all C projects. It shall be used for all utilities it provides; redefinition of its facilities is prohibited. Installation shall be verified via `pkg-config --cflags --libs dangling`. The source resides at `~/git/libdangling`.
+libdangling is the canonical utility library for all C projects. It shall be used for all utilities it provides; its facilities shall not be redefined. Installation shall be verified via `pkg-config --cflags --libs dangling`.
 
 ### 4.1 Macros (`core/macros.h`, `core/bits.h`)
 
@@ -132,15 +132,15 @@ Logging: `LDG_ERRLOG_ERR()`, `LDG_ERRLOG_WARN()`, `LDG_ERRLOG_INFO()`
 
 ### 4.4 Memory (`mem/`)
 
-All runtime allocation shall use pools (§7.4-5). Two pool modes: fixed-size (`item_size` > 0) for uniform objects with individual dealloc; variable-size (`item_size` == 0) as bump allocator for heterogeneous allocations with bulk-only dealloc via `ldg_mem_pool_reset()`.
+All runtime allocation shall use pools (§7.4-5). Two pool modes: fixed-size (`item_size` > 0) for uniform objects with individual dealloc; variable-size (`item_size` == 0) as bump allocator for heterogeneous allocations with bulk-only dealloc via `ldg_mem_pool_rst()`.
 
-`mem.h`: `ldg_mem_init/shutdown()`, `ldg_mem_alloc(size, &out)/realloc(ptr, size, &out)/dealloc(ptr)`, `ldg_mem_lock/locked_is()`, `ldg_mem_stats_get/leaks_dump/valid_is/size_get()`
-`alloc.h`: `ldg_mem_pool_create(item_size, capacity, &out)/destroy/alloc(pool, size, &out)/dealloc/reset()`, `ldg_mem_pool_remaining_get/used_get/capacity_get/var_is()`
-`secure.h`: `ldg_mem_secure_zero/copy/cmp/cmov/neq()`
+`mem.h`: `LDG_MEM_SENTINEL`, `LDG_MEM_POISON`, `LDG_MEM_POISON_BYTE`, `LDG_MEM_POOL_MAX`, `LDG_MEM_POOL_VAR_ALIGN`
+`alloc.h`: `ldg_mem_init/shutdown()`, `ldg_mem_alloc(size, &out)/realloc(ptr, size, &out)/dealloc(ptr)`, `ldg_mem_lock/locked_is()`, `ldg_mem_stats_get/leaks_dump()`, `ldg_mem_valid_is/size_get()`, `ldg_mem_pool_create(item_size, capacity, &out)/destroy/alloc(pool, size, &out)/dealloc/rst()`, `ldg_mem_pool_remaining_get/used_get/capacity_get/var_is()`
+`secure.h`: `ldg_mem_secure_zero/copy/cmp/cmov/neq_is()`
 
 ### 4.5 String (`str/str.h`)
 
-`ldg_strrbrcpy()`, `ldg_str_to_dec()`, `ldg_hex_str_is()`, `ldg_hex_to_bytes/dword()`, `ldg_byte_to_hex()`, `ldg_dword_to_hex()`, `ldg_char_*_is()` predicates
+`ldg_strrbrcpy()`, `ldg_str_to_dec()`, `ldg_hex_str_is()`, `ldg_hex_to_bytes/dword/nipple()`, `ldg_byte_to_hex()`, `ldg_dword_to_hex()`, `ldg_char_space/digit/alpha/alnum/hex_is()` predicates, `LDG_DJB2_HASH_INIT`, `LDG_ASCII_PRINTABLE_MIN/MAX`, `LDG_ASCII_NONPRINT_CHAR`
 
 ### 4.6 Time (`time/`)
 
@@ -149,9 +149,10 @@ All runtime allocation shall use pools (§7.4-5). Two pool modes: fixed-size (`i
 
 ### 4.7 Threading (`thread/`)
 
-`sync.h`: `ldg_mut_t` (`init/lock/unlock/trylock/destroy`); `ldg_cond_t` (`init/wait/timedwait/signal/broadcast/destroy`); `ldg_sem_t` (`init/open/wait/trywait/post/destroy`)
-`spsc.h`: `ldg_spsc_queue_t`, `ldg_spsc_init/push/pop/peek/cunt/empty/full/shutdown()`
-`pool.h`: `ldg_thread_pool_t`, `ldg_thread_pool_init/start/stop/shutdown/worker_cunt_get()`
+`sync.h`: `ldg_mut_t` (`init(shared)/lock/unlock/trylock/destroy`); `ldg_cond_t` (`init(shared)/wait/timedwait/sig/bcast/destroy`); `ldg_sem_t` (`init(name, init_val)/open/wait/trywait/post/destroy`)
+`spsc.h`: `ldg_spsc_queue_t`, `ldg_spsc_init/shutdown/push/pop/peek()`, `ldg_spsc_cunt_get/empty_is/full_is()`
+`mpmc.h`: `ldg_mpmc_queue_t`, `ldg_mpmc_init/shutdown/push/pop/wait()`, `ldg_mpmc_cunt_get/empty_is/full_is()`
+`pool.h`: `ldg_thread_pool_t`, `ldg_thread_pool_init/shutdown/start/stop/submit()`, `ldg_thread_pool_worker_cunt_get()`
 
 ### 4.8 Math (`math/linalg.h`)
 
@@ -165,19 +166,47 @@ All runtime allocation shall use pools (§7.4-5). Two pool modes: fixed-size (`i
 
 `ldg_tok_t`, `ldg_tok_arr_t`, `ldg_parse_tokenize()`, `ldg_parse_streq()`
 
-### 4.11 x86-64 (`arch/x86_64/`)
+### 4.11 amd64 (`arch/amd64/`)
 
 `fence.h`: `LDG_MFENCE/SFENCE/LFENCE/BARRIER/PAUSE`, `LDG_SMP_MB/WMB/RMB/SIG_FENCE()`
 `atomic.h`: `LDG_READ_ONCE/WRITE_ONCE()`, `_AGGREGATE()` variants, `LDG_LOAD_ACQUIRE/STORE_RELEASE()`, `LDG_FETCH_ADD/SUB()`, `LDG_ADD_FETCH/SUB_FETCH()`, `LDG_CAS/CAS_WEAK()`
 `prefetch.h`: `LDG_PREFETCH_R/W/NTA()`
-`tsc.h`: `ldg_tsc_ctx_t`, `ldg_rdtsc/rdtscp()`, `ldg_tsc_calibrate/sample/serialized_sample/serialize/delta/to_sec()`
-`cpuid.h`: `ldg_cpuid()`, `ldg_cpuid_features_t`, `ldg_cpuid_features_get/vendor_get/brand_get()`, `ldg_cpu_core_id_get/relax()`
-`syscall.h`: `ldg_syscall0()` through `ldg_syscall4()`, `LDG_SYS_*` constants
+`tsc.h`: `ldg_tsc_ctx_t`, `ldg_tsc_calibrate/sample/serialized_sample/serialize/delta/to_sec()`
+`cpuid.h`: `ldg_cpuid()`, `ldg_cpuid_features_t`, `ldg_cpuid_features_get/vendor_get/brand_get()`, `ldg_cpuid_max_leaf_get/max_ext_leaf_get()`, `ldg_cpu_core_id_get/relax()`
+`syscall.h`: `ldg_syscall0()` through `ldg_syscall4()`, `ldg_rdtsc/rdtscp()`, `LDG_SYS_*` constants
 
 ### 4.12 Protocol (`proto/`)
 
 `emiru.h`: `ldg_emiru_hdr_t`, `ldg_emiru_decoded_t`, `ldg_emiru_hdr_validate()`, `ldg_emiru_decode()`, `ldg_emiru_encode()`, `ldg_emiru_encoded_size_get()`
 `emiemi.h`: `ldg_emiemi_io_ctx_t`, `ldg_emiemi_hdr_recv()`, `ldg_emiemi_payload_recv()`, `ldg_emiemi_recv()`, `ldg_emiemi_send()`, `ldg_emiemi_encode()`, `ldg_emiemi_decode()`, `ldg_emiemi_fnv1a()`, `ldg_emiemi_encoded_size_get()`
+
+### 4.13 Arithmetic (`core/arith.h`)
+
+Checked arithmetic with overflow detection via `__builtin_*_overflow`. `ldg_arith_32_add/sub/mul/div()`, `ldg_arith_64_add/sub/mul/div()`. All return `uint32_t` error codes; result written through out-parameter. Division by zero shall return `LDG_ERR_FUNC_ARG_INVALID`; overflow shall return `LDG_ERR_OVERFLOW`.
+
+### 4.14 Format (`fmt/fmt.h`)
+
+`ldg_fmt_cfg_get()`, `ldg_fmt_cfg_path_get()`
+
+### 4.15 I/O (`io/`)
+
+`file.h`: `ldg_io_file_t`, `ldg_io_stat_t`, `ldg_io_file_open/close/rd/wr/seek/pos_get/stat/fstat/sync/truncate/lock/unlock/dup()`, `ldg_io_pipe_create()`, `LDG_IO_RDONLY/WRONLY/RDWR/CREATE/TRUNC/APPEND/EXCL`, `LDG_IO_SEEK_SET/CUR/END`
+`dir.h`: `ldg_io_dir_t`, `ldg_io_dirent_t`, `ldg_io_dir_create/destroy/open/rd/close()`, `ldg_io_dirent_name_get/dir_is()`
+`path.h`: `ldg_io_path_rename/unlink/mode_set/exists_is()`, `ldg_io_symlink_create/rd()`, `ldg_io_path_sep_get/join/basename_get/dirname_get/ext_get/absolute_is/normalize/home_get/tmp_get/resolve/expand()`
+
+### 4.16 System (`sys/`)
+
+`info.h`: `ldg_sys_hostname_get()`, `ldg_sys_cpu_cunt_get()`, `ldg_sys_page_size_get()`, `ldg_sys_env_get()`, `ldg_sys_pid_get()`
+`tty.h`: `ldg_sys_tty_stdout_is()`, `ldg_sys_tty_width_get()`
+`uuid.h`: `ldg_sys_uuid_gen()`, `ldg_sys_uuid_to_str()`, `LDG_UUID_BYTE_SIZE`, `LDG_UUID_STR_SIZE`
+
+### 4.17 Audio (`audio/audio.h`)
+
+`ldg_audio_stream_t`, `ldg_audio_sink_t`, `ldg_audio_src_t`, `ldg_audio_init/shutdown/sync()`, `ldg_audio_master_vol_get/set()`, `ldg_audio_stream_vol_get/set/mute_get/mute_set/list/free/name_get()`, `ldg_audio_self_register/id_get/vol_get/vol_set()`, `ldg_audio_stream_self_get()`, `ldg_audio_sink_list/free()`, `ldg_audio_src_list/free()`, `ldg_audio_default_sink_get/src_get()`, `ldg_audio_duck/unduck()`
+
+### 4.18 MISC ISA (`arch/misc/misc.h`)
+
+MISC ISA encoder/decoder/disassembler. `ldg_misc_decoded_t`, `ldg_misc_encode/decode/validate/disasm()`, `ldg_misc_opcode_get/dst_get/src_get/config_get()`, `ldg_misc_cph_encode/cpl_encode/shl_imm_encode/shr_imm_encode()`, `LDG_MISC_OP_*` opcodes, `LDG_MISC_DR*` registers, field masks/shifts, memory map constants, exception codes
 
 ---
 
@@ -207,15 +236,15 @@ Coccinelle semantic patches are located at `~/.config/git/cocci/`. The tool shal
 
 ### 5.4 Branch Naming
 
-Pattern: `type/name`. Types: `feat/ fix/ hot/ rel/ misc/ docs/ refactor/ test/ chore/ perf/ ci/ build/ revert/`. Non-conforming names result in undefined behavior.
+Branch names shall follow the pattern `type/name`. Types: `feat/ fix/ hot/ rel/ misc/ docs/ refactor/ test/ chore/ perf/ ci/ build/ revert/`. If a branch name does not conform, the behavior is undefined.
 
 ### 5.5 Commit Messages
 
-Pattern: `type(scope): description`. Length shall be 75-100 characters. Imperative mood; the description shall not end with a period. Only the description shall be provided; `type(scope):` is auto-populated by hook.
+Commit messages shall follow the pattern `type(scope): description`. The length shall be 75-100 characters. The description shall use imperative mood and shall not end with a period. Only the description shall be provided; `type(scope):` is auto-populated by hook.
 
 ### 5.6 Commit Atomicity
 
-One subsystem per commit (directory path + base filename). Scope shall match subsystem. `.h`/`.c` with same base name shall be committed together. `CMakeLists.txt` constitutes its own subsystem.
+Each commit shall address one subsystem (directory path + base filename). The scope shall match the subsystem. `.h`/`.c` files with the same base name shall be committed together. `CMakeLists.txt` constitutes its own subsystem.
 
 ### 5.7 Test State Tracking
 
@@ -227,7 +256,7 @@ The `std_invalidate_test_state(main_target)` function shall handle recompilation
 
 ### 5.8 Git Invocation
 
-`git -C <path>` shall not be used; run from repo root.
+All git commands shall be run from the repository root.
 
 ### 5.9 Git Flow
 
@@ -235,7 +264,7 @@ The `std_invalidate_test_state(main_target)` function shall handle recompilation
 
 ### 5.10 QEMU Test Execution
 
-All tests shall run inside persistent QEMU/KVM VMs (libvirt). Host-native execution shall not be used. Rationale: DKMS modules may panic host; single infrastructure for all tests.
+All tests shall run inside persistent QEMU/KVM VMs (libvirt). Host-native test execution shall not be used; isolation is required to preserve host stability and security.
 
 #### 5.10.1 VM Architecture
 
@@ -325,11 +354,11 @@ Prior to implementation, all decision points shall be identified. Architecture, 
 
 ## 7. Implementation Rules
 
-1. Stubs shall not be used; only full implementations shall be permitted. Stubs pollute symbol tables.
+1. Stubs shall not be used; only full implementations shall be permitted.
 2. Existing logic shall be modified incrementally.
 3. Zero-based indexing shall be used. Translation shall occur at the boundary if external dependencies use one-based indexing.
 4. Heap allocation (`ldg_mem_alloc`/`ldg_mem_realloc`, `malloc`/`calloc`/`realloc`) shall not be used after initialization; only `*_init` and `*_create` functions may heap-allocate. `ldg_mem_lock()` shall be called after initialization; heap allocation after the lock shall fail.
-5. All post-initialization allocation shall use `ldg_mem_pool_alloc`. Fixed-size pools (`item_size` > 0) shall be used for uniform objects. Variable-size pools (`item_size` == 0) shall be used for heterogeneous allocations with shared lifetime. `ldg_mem_pool_reset()` shall be used for bulk deallocation of variable-size pools.
+5. All post-initialization allocation shall use `ldg_mem_pool_alloc`. Fixed-size pools (`item_size` > 0) shall be used for uniform objects. Variable-size pools (`item_size` == 0) shall be used for heterogeneous allocations with shared lifetime. `ldg_mem_pool_rst()` shall be used for bulk deallocation of variable-size pools.
 
 ---
 
@@ -356,17 +385,16 @@ ast-grep run --pattern 'typedef struct $NAME { $$$BODY }' --lang c file.c
 ### 10.1 Formatting
 
 1. Emojis and decorative symbols shall not be used
-2. Line wrapping shall not be used; horizontal scrolling is acceptable
+2. Line wrapping shall not be used; horizontal scrolling may be used
 3. Visual alignment shall not be used; one space shall separate type and symbol
 4. Indentation shall use 4 spaces; tabs shall not be used
 5. Function definitions shall use Allman braces
 6. Guard clauses shall be single-line: `if (UNLIKELY(!ptr)) { return ERR_FUNC_ARG_NULL; }`
-7. Only single statements shall be inlined; nested single-statement is acceptable: `while (x) { if (y) { return z; } }`
+7. Only single statements shall be inlined; nested single-statement may be used: `while (x) { if (y) { return z; } }`
 8. A space shall follow keywords; no space shall precede function call parentheses
-9. Declarations shall appear at top of scope, initialized to 0/NULL
+9. Declarations shall appear at the top of the scope and shall be initialized to `0x0`
 10. Return values shall be evaluated; `(void)` cast shall not be used
 11. Output redirection (`>&2`, `>/dev/null`, `2>&1`) shall not be used in scripts
-12. Zero-based indexing shall be used; translation shall occur at external boundaries
 
 ### 10.2 Naming
 
@@ -380,7 +408,7 @@ ast-grep run --pattern 'typedef struct $NAME { $$$BODY }' --lang c file.c
 
 1. Global and file-scope static variables shall not be used; forward declarations shall not be used
 2. Backend abstraction: generic struct shall use `void *ctx_name`; backends cast to own type
-3. Struct padding shall use `uint8_t pudding[N]`; cache-aligned: `__attribute__((aligned(64)))`
+3. Struct padding shall use `uint8_t pudding[N]`; cache-aligned structs shall use `__attribute__((aligned(64)))`
 4. Only unsigned fixed-width types shall be used: `uint8_t`, `uint16_t`, `uint32_t`, `uint64_t`, `uintptr_t`. Ambiguous-width types (`size_t`, `ssize_t`, `unsigned int`, `unsigned long`) shall not be used. Signed types from external APIs shall be cast to the appropriate fixed-width unsigned type at the boundary
 5. Sentinel values shall be `UINT*_MAX`; index initialization shall be `UINT*_MAX`; null shall be `0x0`
 6. Boolean values shall be `uint8_t` (0 or 1). `_Bool`, `bool`, and `stdbool.h` shall not be used
@@ -391,7 +419,7 @@ Functions shall return `uint32_t` with `*_ERR_*` codes. Functions shall not retu
 
 ### 10.5 Comments
 
-Comments shall be minimal: section dividers only (`// module`). Doc comments, doxygen, and inline explanations shall not be used. Brief callback hints are acceptable. Proper grammar shall be used; semicolons separate clauses.
+Source code shall be self-documenting. Comments shall not be used. Doc comments, doxygen, section dividers, and inline explanations shall not be used. Brief callback hints and edge-case documentation shall be the sole exceptions.
 
 ### 10.6 Log Messages
 
@@ -408,9 +436,9 @@ Core headers shall include only `<stdint.h>` and engine headers. Third-party inc
 
 Full words shall not be used in identifiers where an abbreviation is defined below.
 
-**Core:** `sys=system init=initialize ctx=context conf=config desc=descriptor func=function cb=callback attr=attribute dev=device fmt=format idx=index val=value ptr=pointer ret=return err=error src=source dst=destination len=length buff=buffer addr=address alloc=allocation dealloc=deallocation cunt=count cuntr=counter pudding=padding op=operator/operand lhs=left rhs=right decl=declaration def=definition ref=reference`
+**Core:** `sys=system init=initialize rst=reset ctx=context conf=config desc=descriptor func=function cb=callback attr=attribute dev=device fmt=format idx=index val=value ptr=pointer ret=return err=error src=source dst=destination len=length buff=buffer addr=address alloc=allocation dealloc=deallocation cunt=count cuntr=counter pudding=padding op=operator/operand lhs=left rhs=right decl=declaration def=definition ref=reference`
 
-**Concurrency:** `mut=mutex cond=condition sem=semaphore sync=synchronization proc=process pool=pool mngr=manager shm=shared_memory`
+**Concurrency:** `mut=mutex cond=condition sem=semaphore sync=synchronization sig=signal bcast=broadcast proc=process pool=pool mngr=manager shm=shared_memory`
 
 **Data:** `hdr=header msg=message req=request resp=response conn=connection`
 
